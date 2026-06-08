@@ -1,0 +1,21 @@
+#group table {
+    border-collapse: collapse;
+}
+
+#group th:nth-child(1),
+#group td:nth-child(1),
+#group th:nth-child(2),
+#group td:nth-child(2),
+#group th:nth-child(3),
+#group td:nth-child(3) {
+ position: sticky;
+ left: 0;
+ background-color: #ffffff;
+ z-index: 1;
+}
+
+#group th:nth-child(1),
+#group th:nth-child(2),
+#group th:nth-child(3) {
+ z-index: 2;
+}
