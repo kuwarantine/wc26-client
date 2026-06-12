@@ -1,4 +1,4 @@
-import { Table, TableContainer, Tbody, Thead, Tr, Td, Th, SkeletonText } from "@chakra-ui/react";
+import { Table, SkeletonText } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { API_URL } from "../lib/Constants";
 
@@ -27,15 +27,15 @@ function ranksWithTies(standings: UserPoints[]) {
 
 export function Standings() {
     const [standings, setStandings] = useState<UserPoints[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
     useEffect(() => {
         const fetchData = async () => {
             try {
-                setIsLoading(true);
+                setLoading(true);
                 const res = await fetch(API_URL+'/standings');
                 const json = await res.json();
                 setStandings(json);
-                setIsLoading(false);
+                setLoading(false);
             } catch (err) {
                 console.log(err);
             }
@@ -47,23 +47,23 @@ export function Standings() {
     const ranks = ranksWithTies(standings);
 
     return (
-        <TableContainer>
-            <Table fontSize='clamp(1rem, 0.95rem + 0.25vw, 1.25rem)'>
-                <Thead>
-                    <Tr key='titles'>
-                        {columns.map((col, i) => <Th textAlign='center' key={i}>{col}</Th>)}
-                    </Tr>
-                </Thead>
-                <Tbody>
+        <Table.ScrollArea>
+            <Table.Root fontSize='clamp(1rem, 0.95rem + 0.25vw, 1.25rem)'>
+                <Table.Header>
+                    <Table.Row key='titles'>
+                        {columns.map((col, i) => <Table.ColumnHeader textAlign='center' key={i}>{col}</Table.ColumnHeader>)}
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
                     {standings.map((user, i) => 
-                        <Tr key={i}>
-                            <Td textAlign='center' px={[0, 3]} fontWeight='bold' key='pos'>{ranks[i]}</Td>
-                            <Td textAlign='center' px={[0, 3]} key='name'>{user.name}</Td>
-                            <Td textAlign='center' px={[0, 3]} key='pts'>{user.points}</Td>
-                        </Tr>)}
-                </Tbody>
-            </Table>
-            <SkeletonText isLoaded={!isLoading} noOfLines={20} spacing={10}/>
-        </TableContainer>
+                        <Table.Row key={i}>
+                            <Table.Cell textAlign='center' px={[0, 3]} fontWeight='bold' key='pos'>{ranks[i]}</Table.Cell>
+                            <Table.Cell textAlign='center' px={[0, 3]} key='name'>{user.name}</Table.Cell>
+                            <Table.Cell textAlign='center' px={[0, 3]} key='pts'>{user.points}</Table.Cell>
+                        </Table.Row>)}
+                </Table.Body>
+            </Table.Root>
+            <SkeletonText loading={loading} noOfLines={20} gap="10"/>
+        </Table.ScrollArea>
     );
 }

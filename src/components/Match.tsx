@@ -1,7 +1,7 @@
-import { Box, HStack, VStack, Text, StackDivider, Flex, Divider, Icon, Tr, Td, Table, Tbody, Accordion, AccordionItem, AccordionButton, AccordionIcon, AccordionPanel, IconButton, Spinner, Heading } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { Box, HStack, VStack, Text, Separator, Flex, Icon, Table, Accordion, IconButton, Spinner, Heading, DatePicker, Portal } from "@chakra-ui/react";
+import { useEffect, useState, Dispatch, SetStateAction } from "react";
+import { today, getLocalTimeZone, DateValue } from "@internationalized/date";
 import * as icons from "./Icons";
-import { SingleDatepicker } from "chakra-dayzed-datepicker";
 import { FaChevronLeft, FaChevronRight, FaExclamationTriangle } from "react-icons/fa";
 import { API_URL } from "../lib/Constants";
 
@@ -34,6 +34,11 @@ interface EventRowProps {
     data: MatchEvent,
     id: number,
     alignR: boolean
+}
+
+interface MatchDatePickerProps {
+    date: DateValue,
+    setDate: Dispatch<SetStateAction<DateValue>>
 }
 
 function iconForEvent(event: string, detail: string) {
@@ -144,29 +149,29 @@ function EventRow(props: EventRowProps) {
     const flexDir = props.alignR ? 'row-reverse' : 'row';
     const isGoal = props.data.type === 'Goal';
     return (
-        <Tr key={props.id} display='flex' flexDirection={flexDir} >
-            <Td key='icon' p='2px' textAlign={alignDir}><Icon as={iconForEvent(props.data.type, props.data.detail)} /></Td>
-            <Td key='time' p='2px' textAlign={alignDir} fontSize='0.6rem' textColor='gray.600' fontWeight={isGoal ? 'bold' : 'normal'}>{timeForEvent(props.data.time, props.data.extra_time)}</Td>
-            <Td key='main' p='2px' textAlign={alignDir} fontSize='0.6rem' fontWeight={isGoal ? 'bold' : 'normal'}>{mainTextForEvent(props.data.type, props.data.detail, props.data.player, props.data.assist)}</Td>
-            <Td key='xtra' p='2px' textAlign={alignDir} style={{wordWrap: 'break-word'}} fontSize='0.4rem'>{extraTextForEvent(props.data.type, props.data.detail, props.data.player, props.data.assist)}</Td>
-        </Tr>
+        <Table.Row key={props.id} display='flex' flexDirection={flexDir} >
+            <Table.Cell key='icon' p='2px' textAlign={alignDir}><Icon as={iconForEvent(props.data.type, props.data.detail)} /></Table.Cell>
+            <Table.Cell key='time' p='2px' textAlign={alignDir} fontSize='0.6rem' color='gray.600' fontWeight={isGoal ? 'bold' : 'normal'}>{timeForEvent(props.data.time, props.data.extra_time)}</Table.Cell>
+            <Table.Cell key='main' p='2px' textAlign={alignDir} fontSize='0.6rem' fontWeight={isGoal ? 'bold' : 'normal'}>{mainTextForEvent(props.data.type, props.data.detail, props.data.player, props.data.assist)}</Table.Cell>
+            <Table.Cell key='xtra' p='2px' textAlign={alignDir} style={{wordWrap: 'break-word'}} fontSize='0.4rem'>{extraTextForEvent(props.data.type, props.data.detail, props.data.player, props.data.assist)}</Table.Cell>
+        </Table.Row>
     );
 }
 
 function MatchDetails(homeEvents: MatchEvent[], awayEvents: MatchEvent[]) {
     return (
         <Flex w='100%' justifyContent='space-between'>
-            <Table variant='unstyled' alignSelf='start'>
-                <Tbody>
+            <Table.Root unstyled alignSelf='start'>
+                <Table.Body>
                     {homeEvents.map((e, i) => <EventRow data={e} id={i} key={i} alignR={false}/>)}
-                </Tbody>
-            </Table>
-            <Divider orientation='vertical' borderColor='gray.200' h='auto' m='3'/>
-            <Table variant='unstyled' alignSelf='start'>
-                <Tbody>
+                </Table.Body>
+            </Table.Root>
+            <Separator orientation='vertical' borderColor='gray.200' h='auto' m='3'/>
+            <Table.Root unstyled alignSelf='start'>
+                <Table.Body>
                     {awayEvents.map((e, i) => <EventRow data={e} id={i} key={i} alignR={true}/>)}
-                </Tbody>
-            </Table>
+                </Table.Body>
+            </Table.Root>
         </Flex>
     );
 }
@@ -187,44 +192,70 @@ function getFormattedDate(date: number) {
     return out;
 }
 
-function toBackendDate(date: Date) {
-    const year = date.getFullYear();
-    const month = date.getMonth()+1;
-    const day = date.getDate();
+function toBackendDate(date: DateValue) {
+    return date.toString();
+}
 
-    return year+'-'+month+'-'+day;
+function MatchDatePicker(props: MatchDatePickerProps) {
+    return (
+    <DatePicker.Root openOnClick maxWidth="20rem" value={[props.date]} onValueChange={(e) => props.setDate(e.value[0])}>
+      <DatePicker.Control>
+        <DatePicker.Input />
+      </DatePicker.Control>
+      <Portal>
+        <DatePicker.Positioner>
+          <DatePicker.Content>
+            <DatePicker.View view="day">
+              <DatePicker.Header />
+              <DatePicker.DayTable />
+            </DatePicker.View>
+            <DatePicker.View view="month">
+              <DatePicker.Header />
+              <DatePicker.MonthTable />
+            </DatePicker.View>
+            <DatePicker.View view="year">
+              <DatePicker.Header />
+              <DatePicker.YearTable />
+            </DatePicker.View>
+          </DatePicker.Content>
+        </DatePicker.Positioner>
+      </Portal>
+    </DatePicker.Root>
+  )
 }
 
 function Match(props: MatchProps) {
     return (
-        <Box textColor='gray.700' border='1px solid' borderColor='gray.200' borderRadius='md' p='5' mb='5' whiteSpace='nowrap'>
-            <VStack divider={<StackDivider borderColor='gray.200'/>}>
+        <Box color='gray.700' border='1px solid' borderColor='gray.200' borderRadius='md' p='5' mb='5' whiteSpace='nowrap'>
+            <VStack separator={<Separator borderColor='gray.200'/>}>
                 <Text fontSize='0.8rem'>{getFormattedDate(props.data.date)}</Text>
                 <Flex align='center' w='100%' mx='10'>
                     {/* Team 1 */}
-                    <VStack spacing='0' flex='1'>
+                    <VStack gap='0' flex='1'>
                         <Text fontSize='3rem'>{props.data.homeEmoji}</Text>
                         <Text fontSize='1rem'>{props.data.homeTeam}</Text>
                     </VStack>
                     {/* Score */}
                     <Text alignSelf='center' fontSize='2rem' fontWeight='bold'>{props.data.homeScore ?? ' '} - {props.data.awayScore ?? ' '}</Text>
                     {/* Team 2 */}
-                    <VStack spacing='0' flex='1'>
+                    <VStack gap='0' flex='1'>
                         <Text fontSize='3rem'>{props.data.awayEmoji}</Text>
                         <Text fontSize='1rem'>{props.data.awayTeam}</Text>
                     </VStack>
                 </Flex>
-                <Accordion w='100%' allowToggle>
-                    <AccordionItem border='white'>
-                        <AccordionButton justifyContent='center'>
-                            <Text fontSize='0.8rem' textColor='gray.800'>Details</Text>
-                            <AccordionIcon />
-                        </AccordionButton>
-                        <AccordionPanel>
-                            {MatchDetails(props.data.homeEvents, props.data.awayEvents)}
-                        </AccordionPanel>
-                    </AccordionItem>
-                </Accordion>
+                <Accordion.Root w='100%' collapsible>
+                    <Accordion.Item value="details" border='white'>
+                        <Accordion.ItemTrigger justifyContent='center'>
+                            <Text fontSize='0.8rem' color='gray.800'>Details</Text>
+                            <Accordion.ItemIndicator />
+                        </Accordion.ItemTrigger>
+                        <Accordion.ItemContent>
+                            <Accordion.ItemBody>
+                                {MatchDetails(props.data.homeEvents, props.data.awayEvents)}
+                            </Accordion.ItemBody>
+                        </Accordion.ItemContent>
+                    </Accordion.Item>
+                </Accordion.Root>
             </VStack>
         </Box>
     );
@@ -232,7 +263,7 @@ function Match(props: MatchProps) {
 
 export function Matches() {
     const [match, setMatch] = useState<MatchData[]>([]);
-    const [date, setDate] = useState(new Date());
+    const [date, setDate] = useState<DateValue>(today(getLocalTimeZone()));
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -252,29 +283,29 @@ export function Matches() {
   }, [date]);
 
     function prevDate() {
-        const pd = new Date(date);
-        pd.setDate(date.getDate()-1);
-        setDate(pd);
+        setDate(date.subtract({days:1}))
     }
 
     function nextDate() {
-        const nd = new Date(date);
-        nd.setDate(date.getDate()+1);
-        setDate(nd);
+        setDate(date.add({days:1}))
     }
 
     return (
         <VStack>
             <HStack>
-                <IconButton aria-label='Previous' icon={<FaChevronLeft />} onClick={prevDate}/>
-                <SingleDatepicker name='date-input' date={date} onDateChange={setDate}/>
-                <IconButton aria-label='Next' icon={<FaChevronRight />} onClick={nextDate}/>
+                <IconButton aria-label='Previous' onClick={prevDate} color='gray.500' backgroundColor='gray.100' borderColor='gray.200'>
+                    <FaChevronLeft />
+                </IconButton>
+                <MatchDatePicker date={date} setDate={setDate}/>
+                <IconButton aria-label='Next' onClick={nextDate} color='gray.500' backgroundColor='gray.100' borderColor='gray.200'>
+                    <FaChevronRight />
+                </IconButton>
             </HStack>
             {isLoading ? <Spinner mt='10' size='xl'/> : null}
             <Flex direction='column'>
                 {match.map((m, i) => <Match key={i} data={m}/>)}
             </Flex>
-            {(!isLoading && match.length === 0) ? <Heading fontSize='1.25rem' textColor='gray.500' mt='20'>No matches on this day.</Heading> : null}
+            {(!isLoading && match.length === 0) ? <Heading fontSize='1.25rem' color='gray.500' mt='20'>No matches on this day.</Heading> : null}
         </VStack>
     )
 }

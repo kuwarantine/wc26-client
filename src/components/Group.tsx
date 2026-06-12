@@ -1,11 +1,5 @@
 import {
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    TableContainer,
     Text,
     VStack,
     Box,
@@ -42,9 +36,9 @@ function TeamRow(team: TeamData) {
     const vals = [team.position, team.emoji, team.country, played, team.won, team.drawn, team.lost, team.goalsFor, team.goalsAgainst, gd, points];
 
     return (
-        <Tr key={team.id}>
-            {vals.map((v, i) => <Td px={[0, 3]} py={[2, 3]} textAlign='center' key={keys[i]}>{v}</Td>)}
-        </Tr>
+        <Table.Row key={team.id}>
+            {vals.map((v, i) => <Table.Cell px={[0, 3]} py={[2, 3]} textAlign='center' key={keys[i]}>{v}</Table.Cell>)}
+        </Table.Row>
     )
 }
 
@@ -55,18 +49,18 @@ function GroupTable(props: GroupProps) {
         <Box border='1px solid' borderColor='gray.100' borderRadius='md' p={[3, 3]} m={[5, 5]}>
             <VStack alignItems='start'>
                 <Text fontWeight='bold' color='gray.600' fontSize='1.25rem'>Group {String.fromCharCode(65+props.id)}</Text>
-                <TableContainer>
-                    <Table id='group' variant='simple' fontSize='clamp(1rem, 0.95rem + 0.25vw, 1.25rem)' style={{borderCollapse: 'collapse'}}>
-                        <Thead>
-                            <Tr key='titles'>
-                                {columns.map((column, i) => <Th textAlign='center' key={i}>{column}</Th>)}
-                            </Tr>
-                        </Thead>
-                        <Tbody>
+                <Table.ScrollArea w='100%'>
+                    <Table.Root id='group' fontSize='clamp(1rem, 0.95rem + 0.25vw, 1.25rem)' style={{borderCollapse: 'collapse'}}>
+                        <Table.Header>
+                            <Table.Row key='titles'>
+                                {columns.map((column, i) => <Table.ColumnHeader textAlign='center' key={i}>{column}</Table.ColumnHeader>)}
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
                             {props.teams.map((team) => TeamRow(team))}
-                        </Tbody>
-                    </Table>
-                </TableContainer>
+                        </Table.Body>
+                    </Table.Root>
+                </Table.ScrollArea>
             </VStack>
         </Box>
     )
@@ -81,7 +75,7 @@ export function GroupTables() {
                 setIsLoading(true);
                 const res = await fetch(API_URL+'/groups');
                 const json = await res.json();
-                const teamArr: TeamData[][] = [[],[],[],[],[],[]];
+                const teamArr: TeamData[][] = [[],[],[],[],[],[],[],[],[],[],[],[]];
 
                 for (const row of json) {
                 const data: TeamData = {id: row.id, position: row.position, emoji: row.emoji, country: row.country, won: row.won, drawn: row.drawn, lost: row.lost, goalsFor: row.goals_for, goalsAgainst: row.goals_against, groupId: row.groupid};

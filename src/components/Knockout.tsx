@@ -1,18 +1,6 @@
-import { VStack, Text, Flex, Divider, Spacer, Box, forwardRef } from "@chakra-ui/react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { VStack, Text, Flex, Separator, Spacer, Box, Grid } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
 import { API_URL } from "../lib/Constants";
-
-interface Coords {
-    xr: number | 0,
-    xl?: number | 0,
-    y: number | 0
-}
-
-interface LineCoords {
-    t: Coords,
-    b: Coords,
-    s: Coords
-}
 
 interface BracketMatchData {
     date: number | null,
@@ -26,7 +14,8 @@ interface BracketMatchData {
     awayPen: number | null,
     homeEmoji: string,
     awayEmoji: string,
-    matchNumber: number
+    matchNumber: number,
+    lineDirection: string;
 }
 
 const emptyBMData = (m: number) => {
@@ -42,7 +31,8 @@ const emptyBMData = (m: number) => {
         awayPen: null,
         homeEmoji: '',
         awayEmoji: '',
-        matchNumber: m
+        matchNumber: m,
+        lineDirection: 'none'
     };
 }
 
@@ -60,87 +50,91 @@ function getFormattedDate(date: number) {
     return out;
 }
 
-function Line(pos: LineCoords) {
-    const midX = ((pos.s.xl ?? 0) + (pos.t.xr ?? 0)) / 2;
-
-    return (
-            <>
-                <line x1={pos.t.xr} x2={midX} y1={pos.t.y} y2={pos.t.y}/>
-                <line x1={pos.b.xr} x2={midX} y1={pos.b.y} y2={pos.b.y}/>
-                <line x1={midX} x2={pos.s.xl} y1={pos.s.y} y2={pos.s.y}/>
-                <line y1={pos.t.y} y2={pos.b.y} x1={midX} x2={midX}/>
-            </>
-    )
-}
-
-function getCoords(element: HTMLDivElement | null) {
-    const pos = element?.getBoundingClientRect();
-    const xr = pos?.right;
-    const xl = pos?.left;
-    const y = (pos?.y || 0) +((pos?.height || 0) / 2);
-
-    return {xr: xr || 0, xl: xl || 0, y: y || 0};
-}
-
-function getThreeCoords(t: Coords, b: Coords, s: Coords) {
-    return { t: t, b: b, s: s };
-}
-
-function getLines(cells: Coords[]) {
-    // 0 - 7, 8 - 11, 12-13, 14
-    // 0-1 -> 8, 2-3 -> 9, 4-5 -> 10, 6-7 -> 11, 8-9 -> 12, 10-11 -> 13, 12-13 -> 14
-    const lines: LineCoords[] = [];
-    lines.push(getThreeCoords(cells[0], cells[1], cells[8]));
-    lines.push(getThreeCoords(cells[2], cells[3], cells[9]));
-    lines.push(getThreeCoords(cells[4], cells[5], cells[10]));
-    lines.push(getThreeCoords(cells[6], cells[7], cells[11]));
-    lines.push(getThreeCoords(cells[8], cells[9], cells[12]));
-    lines.push(getThreeCoords(cells[10], cells[11], cells[13]));
-    lines.push(getThreeCoords(cells[12], cells[13], cells[14]));
-
-    return lines;
-}
-
 function KnockoutCell({data}: {data: BracketMatchData}) {
     return (
         <Box border='1px solid' borderColor='gray.100' borderRadius='md' px='2' py='1' fontSize='0.8rem' whiteSpace='nowrap'>
-            <VStack spacing='0'>
-                <Flex w='100%' mb='1' fontSize='0.6rem' textColor='gray.600'>
+            <VStack gap='0'>
+                <Flex w='100%' mb='1' fontSize='0.6rem' color='gray.600'>
                     <Text fontWeight='600'>Match {data.matchNumber}</Text>
                     <Spacer />
                     <Text>{data.date ? getFormattedDate(data.date) : ''}</Text>
                 </Flex>
                 <Flex w='100%'>
-                    <Text align='left'>{data.homeEmoji}{data.homeTeam}</Text>
+                    <Text textAlign='left'>{data.homeEmoji}{data.homeTeam}</Text>
                     <Spacer minW='2rem'/>
                     <Text>{data.homeScore ?? '-'}</Text>
                 </Flex>
-                <Divider orientation='horizontal' />
+                <Separator orientation='horizontal' />
                 <Flex w='100%'>
-                    <Text align='left'>{data.awayEmoji}{data.awayTeam}</Text>
+                    <Text textAlign='left'>{data.awayEmoji}{data.awayTeam}</Text>
                     <Spacer minW='2rem'/>
                     <Text>{data.awayScore ?? '-'}</Text>
                 </Flex>
             </VStack>
+
+            {data.lineDirection === "right" && (
+                <Box
+                position="absolute"
+                top="50%"
+                right="-18px"
+                transform="translateY(-50%)"
+                w="18px"
+                h="100%" /* Height automatically matches the vertical gap of the column stack */
+                borderRight="2px solid"
+                borderTop="2px solid"
+                borderBottom="2px solid"
+                borderColor="border.disabled"
+                pointerEvents="none"
+                />
+            )}
+
+            {data.lineDirection === "left" && (
+                <Box
+                position="absolute"
+                top="50%"
+                left="-18px"
+                transform="translateY(-50%)"
+                w="18px"
+                h="100%"
+                borderLeft="2px solid"
+                borderTop="2px solid"
+                borderBottom="2px solid"
+                borderColor="border.disabled"
+                pointerEvents="none"
+                />
+            )}
         </Box>
     );
 }
 
-const Cell = forwardRef<{data: BracketMatchData}, 'div'>((props, ref) => (
-    <Box ref={ref}><KnockoutCell {...props} /></Box>
-));
+const R32L = [73, 76, 74, 75, 78, 77, 79, 80];
+const R32R = [82, 81, 84, 83, 85, 88, 86, 87];
+const R16L = [90, 89, 91, 92];
+const R16R = [93, 94, 95, 96];
+const QFL = [97, 98];
+const QFR = [99, 100];
+const SFL = [101];
+const SFR = [102];
+const F = [104];
+const ROUNDS = [R32L, R16L, QFL, SFL, F, SFR, QFR, R16R, R32R];
 
-const R16 = [38, 40, 43, 44, 37, 39, 42, 41];
-const QF = [48, 47, 45, 46];
-const SF = [50, 49];
-const F = [51];
-const ROUNDS = [R16, QF, SF, F];
+function lineDirectionForMatch(m: number) {
+    if (m === 104) {
+        return 'none';
+    }
+    else if (m in R32L || m in R16L || m in QFL || m in SFL) {
+        return 'right';
+    } else {
+        return 'left';
+    }
+}
 
 function getBMData(matches: Map<string,BracketMatchData>) {
     const BMData: BracketMatchData[] = [];
     for (const round of ROUNDS) {
         for (const match of round) {
-            const data = matches.get(`${match}`) ?? emptyBMData(match);
+            let data = matches.get(`${match}`) ?? emptyBMData(match);
+            data.lineDirection = lineDirectionForMatch(match);
             BMData.push(data);
         }
     }
@@ -148,26 +142,7 @@ function getBMData(matches: Map<string,BracketMatchData>) {
 }
 
 export function Knockout() {
-    const mainRef = useRef<HTMLDivElement | null>(null);
-    const cellRefs = useRef<Array<HTMLDivElement | null>>([]);
-    const [coords, setCoords] = useState<LineCoords[]>();
-    const [mc, setMC] = useState<Coords>({xr:0, y:0});
-    const [right, setRight] = useState<number | undefined>(768);
-
-    const [matches, setMatches] = useState<BracketMatchData[]>(new Array(15).fill(emptyBMData(1)));
-
-    function draw() {    
-        const crds = [...Array(15).keys()].map((i) => getCoords(cellRefs.current[i]));
-        const lines = getLines(crds);
-        setCoords(lines);
-        const rect = mainRef.current?.getBoundingClientRect();
-        setRight(cellRefs.current[14]?.getBoundingClientRect().right);
-        setMC({xr: rect?.x || 0, y: rect?.y || 0});
-    }
-
-    useLayoutEffect(() => {
-        draw();
-    }, [matches]);
+    const [matches, setMatches] = useState<BracketMatchData[]>(new Array(31).fill(emptyBMData(1)));
 
     useEffect(() => {
         const fetchData = async () => {
@@ -183,43 +158,67 @@ export function Knockout() {
         fetchData();
     }, []);
 
-    useEffect(() => {
-        window.addEventListener('resize', draw);
-        return () => { window.removeEventListener('resize', draw); };
-    }), [];
-
     return (
-            <Box ref={mainRef} position='relative' h='100%' overflowX='auto'>
-                <Box position='absolute' top={-mc.y} left={-mc.xr} pointerEvents='none'>
-                    <svg height='100vh' width={`calc(${right}px + 1em)`} strokeWidth={'2px'} stroke='#CBD5E0'>
-                        {coords?.map((c, i) => <Line key={i} t={c.t} b={c.b} s={c.s}/>)}
-                    </svg>
-                </Box>
-                <Flex h='100%' w='100vw' p='1rem' justify={{md: 'center'}}>
-                    <Flex direction='column' h='100%' justify='space-around' mr='3rem'>
-                        <Cell ref={c => cellRefs.current[0] = c} data={matches[0]}/>
-                        <Cell ref={c => cellRefs.current[1] = c} data={matches[1]}/>
-                        <Cell ref={c => cellRefs.current[2] = c} data={matches[2]}/>
-                        <Cell ref={c => cellRefs.current[3] = c} data={matches[3]}/>
-                        <Cell ref={c => cellRefs.current[4] = c} data={matches[4]}/>
-                        <Cell ref={c => cellRefs.current[5] = c} data={matches[5]}/>
-                        <Cell ref={c => cellRefs.current[6] = c} data={matches[6]}/>
-                        <Cell ref={c => cellRefs.current[7] = c} data={matches[7]}/>       
-                    </Flex>
-                    <Flex direction='column' h='100%' justify='space-around' mr='3em'>
-                        <Cell ref={c => cellRefs.current[8] = c} data={matches[8]}/>
-                        <Cell ref={c => cellRefs.current[9] = c} data={matches[9]}/>
-                        <Cell ref={c => cellRefs.current[10] = c} data={matches[10]}/>
-                        <Cell ref={c => cellRefs.current[11] = c} data={matches[11]}/>
-                    </Flex>
-                    <Flex direction='column' h='100%' justify='space-around' mr='3em'>
-                        <Cell ref={c => cellRefs.current[12] = c} data={matches[12]}/>
-                        <Cell ref={c => cellRefs.current[13] = c} data={matches[13]}/>
-                    </Flex>
-                    <Flex direction='column' h='100%' justify='space-around' mr='3em'>
-                        <Cell ref={c => cellRefs.current[14] = c} data={matches[14]}/>
-                    </Flex>
-                </Flex>
+        <Box position='relative' h='100%' overflowX='auto'>
+            <Grid
+                templateColumns="1fr 1fr 1fr 1fr 1.2fr 1fr 1fr 1fr 1fr"
+                gap="4"
+                p="6"
+                alignItems="center"
+                minW="1400px"
+                overflowX="auto"
+            >
+                {/* ================= LEFT SIDE BRACKET ================= */}
+                <VStack gap="6" gridColumn="1">
+                    <KnockoutCell data={matches[0]} />
+                    <KnockoutCell data={matches[1]} />
+                    <KnockoutCell data={matches[2]} />
+                    <KnockoutCell data={matches[3]} />
+                    <KnockoutCell data={matches[4]} />
+                    <KnockoutCell data={matches[5]} />
+                    <KnockoutCell data={matches[6]} />
+                    <KnockoutCell data={matches[7]} />
+                </VStack>
+                <VStack gap="20" pt="8" gridColumn="2">
+                    <KnockoutCell data={matches[8]} />
+                    <KnockoutCell data={matches[9]} />
+                    <KnockoutCell data={matches[10]} />
+                    <KnockoutCell data={matches[11]} />
+                </VStack>
+                <VStack gap="44" pt="20" gridColumn="3">
+                    <KnockoutCell data={matches[12]} />
+                    <KnockoutCell data={matches[13]} />
+                </VStack>
+                <VStack gap="44" gridColumn="4">
+                    <KnockoutCell data={matches[14]} />
+                </VStack>
+                <VStack gap="44" gridColumn="5">
+                    <KnockoutCell data={matches[15]} />
+                </VStack>
+                <VStack gap="44" gridColumn="6">
+                    <KnockoutCell data={matches[16]} />
+                </VStack>
+                <VStack gap="44" pt="20" gridColumn="7">
+                    <KnockoutCell data={matches[17]} />
+                    <KnockoutCell data={matches[18]} />
+                </VStack>
+                <VStack gap="20" pt="8" gridColumn="8">
+                    <KnockoutCell data={matches[19]} />
+                    <KnockoutCell data={matches[20]} />
+                    <KnockoutCell data={matches[21]} />
+                    <KnockoutCell data={matches[22]} />
+                </VStack>
+                <VStack gap="6" gridColumn="9">
+                    <KnockoutCell data={matches[23]} />
+                    <KnockoutCell data={matches[24]} />
+                    <KnockoutCell data={matches[25]} />
+                    <KnockoutCell data={matches[26]} />
+                    <KnockoutCell data={matches[27]} />
+                    <KnockoutCell data={matches[28]} />
+                    <KnockoutCell data={matches[29]} />
+                    <KnockoutCell data={matches[30]} />
+                </VStack>
+            </Grid>
         </Box>
     );
 }
