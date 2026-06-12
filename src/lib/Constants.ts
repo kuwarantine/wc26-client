@@ -1,1 +1,1 @@
-export const API_URL = process.env.NODE_ENV === 'production' ? 'https://euro-bracket-ffce4e88f14b.herokuapp.com/api' : 'http://localhost:3000/api';
+export const API_URL = import.meta.env.PROD ? 'https://wc26-bracket-cf52bdac465e.herokuapp.com//api' : 'http://localhost:3000/api';
