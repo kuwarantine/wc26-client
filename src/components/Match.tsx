@@ -4,21 +4,48 @@ import { today, getLocalTimeZone, DateValue } from "@internationalized/date";
 import * as icons from "./Icons";
 import { FaChevronLeft, FaChevronRight, FaExclamationTriangle } from "react-icons/fa";
 import { API_URL } from "../lib/Constants";
+import { Flag } from "./Flag";
 
-interface MatchData {
+interface MatchProps {
     date: number,
+    finishCode: string,
+    winner: string,
     homeTeam: string,
     awayTeam: string,
     homeScore: number,
     awayScore: number,
-    homeEmoji: string,
-    awayEmoji: string,
+    homeET: number | null,
+    awayET: number | null,
+    homePen: number | null,
+    awayPen: number | null,
+    homeFlagCode: string,
+    awayFlagCode: string,
+    homeFifaCode: string,
+    awayFifaCode: string,
     homeEvents: MatchEvent[],
     awayEvents: MatchEvent[]
 }
 
-interface MatchProps {
-    data: MatchData
+const emptyMatch = () => {
+    return {
+        date: 0,
+        winner: 'draw',
+        finishCode: 'FT',
+        homeTeam: '',
+        awayTeam: '',
+        homeScore: 0,
+        awayScore: 0,
+        homeET: null,
+        awayET: null,
+        homePen: null,
+        awayPen: null,
+        homeFlagCode: '',
+        awayFlagCode: '',
+        homeFifaCode: '',
+        awayFifaCode: '',
+        homeEvents: [],
+        awayEvents: []
+    }
 }
 
 interface MatchEvent {
@@ -224,23 +251,89 @@ function MatchDatePicker(props: MatchDatePickerProps) {
   )
 }
 
-function Match(props: MatchProps) {
+export function LastUpdate() {
+    const [match, setMatch] = useState<MatchProps>(emptyMatch());
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await fetch(API_URL+'/last');
+                const json = await res.json();
+                setMatch(json);
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        fetchData();
+    }, []);
+
+    const homeScore = (match.finishCode === 'FT') ? match.homeScore : match.homeET;
+    const awayScore = (match.finishCode === 'FT') ? match.awayScore : match.awayET;
+    const underText = (code: string) => {
+        if (code === 'PEN') {
+            return `PEN: ${match.homePen} - ${match.awayPen}`;
+        } else {
+            return code;
+        }
+    }
+
     return (
-        <Box color='gray.700' border='1px solid' borderColor='gray.200' borderRadius='md' p='5' mb='5' whiteSpace='nowrap'>
-            <VStack separator={<Separator borderColor='gray.200'/>}>
-                <Text fontSize='0.8rem'>{getFormattedDate(props.data.date)}</Text>
-                <Flex align='center' w='100%' mx='10'>
+        <Box color='gray.700'>
+            <Text fontWeight='semibold'>Last Update</Text>
+            <Box>
+                <Flex w='100%' gap='3'>
                     {/* Team 1 */}
                     <VStack gap='0' flex='1'>
-                        <Text fontSize='3rem'>{props.data.homeEmoji}</Text>
-                        <Text fontSize='1rem'>{props.data.homeTeam}</Text>
+                        <Flag countryCode={match.homeFlagCode} size='md' />
+                        <Text fontSize='1rem'>{match.homeFifaCode}</Text>
                     </VStack>
                     {/* Score */}
-                    <Text alignSelf='center' fontSize='2rem' fontWeight='bold'>{props.data.homeScore ?? ' '} - {props.data.awayScore ?? ' '}</Text>
+                    <VStack alignSelf='center'>
+                        <Text fontSize='1.5rem' fontWeight='bold'>{homeScore ?? ' '} - {awayScore ?? ' '}</Text>
+                        <Text fontSize='0.8rem'>{underText(match.finishCode)}</Text>
+                    </VStack>
                     {/* Team 2 */}
                     <VStack gap='0' flex='1'>
-                        <Text fontSize='3rem'>{props.data.awayEmoji}</Text>
-                        <Text fontSize='1rem'>{props.data.awayTeam}</Text>
+                        <Flag countryCode={match.awayFlagCode} size='md' />
+                        <Text fontSize='1rem'>{match.awayFifaCode}</Text>
+                    </VStack>
+                </Flex>
+            </Box>
+        </Box>
+        );
+}
+
+function Match(props: MatchProps) {
+    const homeScore = (props.finishCode === 'FT') ? props.homeScore : props.homeET;
+    const awayScore = (props.finishCode === 'FT') ? props.awayScore : props.awayET;
+    const underText = (code: string) => {
+        if (code === 'PEN') {
+            return `PEN: ${props.homePen} - ${props.awayPen}`;
+        } else {
+            return code;
+        }
+    }
+
+    return (
+        <Box color='gray.700' border='1px solid' borderColor='gray.200' borderRadius='md' p='5'>
+            <VStack separator={<Separator borderColor='gray.200'/>}>
+                <Text fontSize='0.8rem'>{getFormattedDate(props.date)}</Text>
+                <Flex w='100%'>
+                    {/* Team 1 */}
+                    <VStack gap='1' flex='1'>
+                        <Flag countryCode={props.homeFlagCode} size='lg' />
+                        <Text fontSize='1rem' fontWeight='semibold'>{props.homeTeam}</Text>
+                    </VStack>
+                    {/* Score */}
+                    <VStack alignSelf='center'>
+                        <Text fontSize='2rem' fontWeight='bold'>{homeScore ?? ' '} - {awayScore ?? ' '}</Text>
+                        <Text fontSize='1rem'>{underText(props.finishCode)}</Text>
+                    </VStack>
+                    {/* Team 2 */}
+                    <VStack gap='1' flex='1'>
+                        <Flag countryCode={props.awayFlagCode} size='lg' />
+                        <Text fontSize='1rem' fontWeight='semibold'>{props.awayTeam}</Text>
                     </VStack>
                 </Flex>
                 <Accordion.Root w='100%' collapsible>
@@ -251,7 +344,7 @@ function Match(props: MatchProps) {
                         </Accordion.ItemTrigger>
                         <Accordion.ItemContent>
                             <Accordion.ItemBody>
-                                {MatchDetails(props.data.homeEvents, props.data.awayEvents)}
+                                {MatchDetails(props.homeEvents, props.awayEvents)}
                             </Accordion.ItemBody>
                         </Accordion.ItemContent>
                     </Accordion.Item>
@@ -262,7 +355,7 @@ function Match(props: MatchProps) {
 }
 
 export function Matches() {
-    const [match, setMatch] = useState<MatchData[]>([]);
+    const [match, setMatch] = useState<MatchProps[]>([]);
     const [date, setDate] = useState<DateValue>(today(getLocalTimeZone()));
     const [isLoading, setIsLoading] = useState(true);
 
@@ -302,8 +395,8 @@ export function Matches() {
                 </IconButton>
             </HStack>
             {isLoading ? <Spinner mt='10' size='xl'/> : null}
-            <Flex direction='column'>
-                {match.map((m, i) => <Match key={i} data={m}/>)}
+            <Flex direction='column' w={{base: '100%', md: '350px'}} gap='5' mb='5'>
+                {match.map((m, i) => <Match key={i} {...m}/>)}
             </Flex>
             {(!isLoading && match.length === 0) ? <Heading fontSize='1.25rem' color='gray.500' mt='20'>No matches on this day.</Heading> : null}
         </VStack>

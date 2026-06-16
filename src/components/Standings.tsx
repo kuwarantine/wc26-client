@@ -1,4 +1,4 @@
-import { Table, SkeletonText } from "@chakra-ui/react";
+import { Table, SkeletonText, Box } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { API_URL } from "../lib/Constants";
 
@@ -47,11 +47,11 @@ export function Standings() {
     const ranks = ranksWithTies(standings);
 
     return (
-        <Table.ScrollArea>
-            <Table.Root fontSize='clamp(1rem, 0.95rem + 0.25vw, 1.25rem)'>
+        <Box>
+            <Table.Root maxW='450px' mx='auto' fontSize='clamp(1rem, 0.95rem + 0.25vw, 1.25rem)'>
                 <Table.Header>
                     <Table.Row key='titles'>
-                        {columns.map((col, i) => <Table.ColumnHeader textAlign='center' key={i}>{col}</Table.ColumnHeader>)}
+                        {columns.map((col, i) => <Table.ColumnHeader fontWeight='bold' textAlign='center' key={i}>{col}</Table.ColumnHeader>)}
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
@@ -59,11 +59,11 @@ export function Standings() {
                         <Table.Row key={i}>
                             <Table.Cell textAlign='center' px={[0, 3]} fontWeight='bold' key='pos'>{ranks[i]}</Table.Cell>
                             <Table.Cell textAlign='center' px={[0, 3]} key='name'>{user.name}</Table.Cell>
-                            <Table.Cell textAlign='center' px={[0, 3]} key='pts'>{user.points}</Table.Cell>
+                            <Table.Cell textAlign='center' px={[0, 3]} fontWeight='semibold' key='pts'>{user.points}</Table.Cell>
                         </Table.Row>)}
                 </Table.Body>
             </Table.Root>
             <SkeletonText loading={loading} noOfLines={20} gap="10"/>
-        </Table.ScrollArea>
+        </Box>
     );
 }
