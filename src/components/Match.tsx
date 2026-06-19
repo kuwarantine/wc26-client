@@ -280,23 +280,23 @@ export function LastUpdate() {
 
     return (
         <Box color='gray.700'>
-            <Text fontWeight='semibold'>Last Update</Text>
+            <Text fontWeight='semibold' fontSize={['0.65rem','0.85rem','1rem']}>Last Update</Text>
             <Box>
-                <Flex w='100%' gap='3'>
+                <Flex w='100%' gap={[2,3]}>
                     {/* Team 1 */}
                     <VStack gap='0' flex='1'>
-                        <Flag countryCode={match.homeFlagCode} size='md' />
-                        <Text fontSize='1rem'>{match.homeFifaCode}</Text>
+                        <Flag countryCode={match.homeFlagCode} w={['28px','34px','40px']} />
+                        <Text fontSize={['0.65rem','0.85rem','1rem']}>{match.homeFifaCode}</Text>
                     </VStack>
                     {/* Score */}
                     <VStack alignSelf='center'>
-                        <Text fontSize='1.5rem' fontWeight='bold'>{homeScore ?? ' '} - {awayScore ?? ' '}</Text>
-                        <Text fontSize='0.8rem'>{underText(match.finishCode)}</Text>
+                        <Text fontSize={['1rem','1.3rem','1.5rem']} fontWeight='bold'>{homeScore ?? ' '} - {awayScore ?? ' '}</Text>
+                        <Text fontSize={['0.5rem','0.65rem','0.8rem']}>{underText(match.finishCode)}</Text>
                     </VStack>
                     {/* Team 2 */}
                     <VStack gap='0' flex='1'>
-                        <Flag countryCode={match.awayFlagCode} size='md' />
-                        <Text fontSize='1rem'>{match.awayFifaCode}</Text>
+                        <Flag countryCode={match.awayFlagCode} w={['28px','34px','40px']} />
+                        <Text fontSize={['0.65rem','0.85rem','1rem']}>{match.awayFifaCode}</Text>
                     </VStack>
                 </Flex>
             </Box>
@@ -322,7 +322,7 @@ function Match(props: MatchProps) {
                 <Flex w='100%'>
                     {/* Team 1 */}
                     <VStack gap='1' flex='1'>
-                        <Flag countryCode={props.homeFlagCode} size='lg' />
+                        <Flag countryCode={props.homeFlagCode} w='60px'/>
                         <Text fontSize='1rem' fontWeight='semibold'>{props.homeTeam}</Text>
                     </VStack>
                     {/* Score */}
@@ -332,7 +332,7 @@ function Match(props: MatchProps) {
                     </VStack>
                     {/* Team 2 */}
                     <VStack gap='1' flex='1'>
-                        <Flag countryCode={props.awayFlagCode} size='lg' />
+                        <Flag countryCode={props.awayFlagCode} w='60px' />
                         <Text fontSize='1rem' fontWeight='semibold'>{props.awayTeam}</Text>
                     </VStack>
                 </Flex>

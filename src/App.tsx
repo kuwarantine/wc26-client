@@ -50,7 +50,8 @@ function MenuDrawer() {
   return (
     <Drawer.Root placement='top'>
       <Drawer.Trigger asChild>
-        <IconButton m='4' borderColor='gray.400' backgroundColor='gray.200' aria-label={'Menu'}>
+        <IconButton size='xl' mt={['2', '3']} mr={['0', '2']}  variant='ghost' bg='transparent' aria-label={'Menu'}
+        css={{'& svg': {w: '6', h: 'auto'}}}>
           <IoMenu />
         </IconButton>
       </Drawer.Trigger>
@@ -59,7 +60,7 @@ function MenuDrawer() {
         <Drawer.Positioner>
           <Drawer.Content>
             <Drawer.CloseTrigger asChild>
-              <CloseButton/>
+              <CloseButton size='xl' bg='transparent' css={{'& svg': {w: '6', h: 'auto'}}} />
             </Drawer.CloseTrigger>
             <Drawer.Header display='flex' justifyContent='center'>
               <Image src='/wc.png' maxW='100px' aspectRatio='1086/326' m='2'/>
@@ -77,11 +78,9 @@ function MenuDrawer() {
 function NavBar() {
   return (
     <Box as='header' position='sticky' top='0px' maxH='110px' borderBottom='1px solid' borderColor='gray.200' backgroundColor='whiteAlpha.800' backdropFilter='saturate(180%) blur(3px)' style={{zIndex: 200}}>
-      <Flex mx='auto' position='relative' px={[2, 3]} py={[0, 3]} maxW='1280px'>
+      <Flex mx='auto' position='relative' px={[4, 4]} py={[3, 3]} maxW='1280px'>
           <Box display='contents' hideFrom='md'>
-            <Box scale={[0.65, 0.85, 1]} transformOrigin='left center'>
-              <LastUpdate />
-            </Box>
+            <LastUpdate />
             <AbsoluteCenter mt={[0, 0]} ml={[4, 6]}>
               <Logo />
             </AbsoluteCenter>

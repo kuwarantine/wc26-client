@@ -37,7 +37,7 @@ function TeamRow(team: TeamData) {
 
     const teamCol = <Flex gap={[2,3]}>
                         {team.position}
-                        <Flag countryCode={team.flagCode} />
+                        <Flag countryCode={team.flagCode} w='30px' />
                         <Text hideFrom='md'>{team.fifaCode}</Text>
                         <Text hideBelow='md'>{team.country}</Text>
                     </Flex>;
