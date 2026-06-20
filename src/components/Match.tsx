@@ -219,10 +219,6 @@ function getFormattedDate(date: number) {
     return out;
 }
 
-function toBackendDate(date: DateValue) {
-    return date.toString();
-}
-
 function MatchDatePicker(props: MatchDatePickerProps) {
     return (
     <DatePicker.Root openOnClick maxWidth="20rem" value={[props.date]} onValueChange={(e) => props.setDate(e.value[0])}>
@@ -355,15 +351,22 @@ function Match(props: MatchProps) {
 }
 
 export function Matches() {
+    const localTZ = getLocalTimeZone();
     const [match, setMatch] = useState<MatchProps[]>([]);
-    const [date, setDate] = useState<DateValue>(today(getLocalTimeZone()));
+    const [date, setDate] = useState<DateValue>(today(localTZ));
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
-                const res = await fetch(API_URL+'/match?date='+toBackendDate(date));
+
+                const params = new URLSearchParams({
+                    date: date.toString(),
+                    zone: localTZ
+                })
+
+                const res = await fetch(`${API_URL}/match?${params.toString()}`);
                 const json = await res.json();
                 setMatch(json);
                 setIsLoading(false);
