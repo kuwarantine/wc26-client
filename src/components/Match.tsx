@@ -1,4 +1,4 @@
-import { Box, HStack, VStack, Text, Separator, Flex, Icon, Table, Accordion, IconButton, Spinner, Heading, DatePicker, Portal } from "@chakra-ui/react";
+import { Box, HStack, VStack, Text, Separator, Flex, Table, Accordion, IconButton, Spinner, Heading, DatePicker, Portal } from "@chakra-ui/react";
 import { useEffect, useState, Dispatch, SetStateAction } from "react";
 import { today, getLocalTimeZone, DateValue } from "@internationalized/date";
 import * as icons from "./Icons";
@@ -72,21 +72,21 @@ function iconForEvent(event: string, detail: string) {
     let icon;
     switch (event) {
         case 'Goal':
-            if (detail === 'Own Goal') { icon = icons.OwnGoalIcon; }
-            else if (detail === 'Missed Penalty') { icon = FaExclamationTriangle; }
-            else { icon = icons.GoalIcon; }
+            if (detail === 'Own Goal') { icon = <icons.OwnGoalIcon />; }
+            else if (detail === 'Missed Penalty') { icon = <FaExclamationTriangle />; }
+            else { icon = <icons.GoalIcon />; }
             break;
         case 'Card':
-            icon = (detail === 'Yellow Card') ? icons.YellowCardIcon : icons.RedCardIcon;
+            icon = (detail === 'Yellow Card') ? <icons.YellowCardIcon /> : <icons.RedCardIcon />;
             break;
         case 'subst':
-            icon = icons.SubIcon;
+            icon = <icons.SubIcon />;
             break;
         case 'Var':
-            icon = icons.VarIcon;
+            icon = <icons.VarIcon />;
             break;
         default:
-            icon = icons.TimeIcon;
+            icon = <icons.TimeIcon />;
             break;
     }
 
@@ -176,8 +176,8 @@ function EventRow(props: EventRowProps) {
     const flexDir = props.alignR ? 'row-reverse' : 'row';
     const isGoal = props.data.type === 'Goal';
     return (
-        <Table.Row key={props.id} display='flex' flexDirection={flexDir} >
-            <Table.Cell key='icon' p='2px' textAlign={alignDir}><Icon as={iconForEvent(props.data.type, props.data.detail)} /></Table.Cell>
+        <Table.Row key={props.id} display='flex' flexDirection={flexDir} verticalAlign='center'>
+            <Table.Cell key='icon' p='2px' textAlign={alignDir}>{iconForEvent(props.data.type, props.data.detail)}</Table.Cell>
             <Table.Cell key='time' p='2px' textAlign={alignDir} fontSize='0.6rem' color='gray.600' fontWeight={isGoal ? 'bold' : 'normal'}>{timeForEvent(props.data.time, props.data.extra_time)}</Table.Cell>
             <Table.Cell key='main' p='2px' textAlign={alignDir} fontSize='0.6rem' fontWeight={isGoal ? 'bold' : 'normal'}>{mainTextForEvent(props.data.type, props.data.detail, props.data.player, props.data.assist)}</Table.Cell>
             <Table.Cell key='xtra' p='2px' textAlign={alignDir} style={{wordWrap: 'break-word'}} fontSize='0.4rem'>{extraTextForEvent(props.data.type, props.data.detail, props.data.player, props.data.assist)}</Table.Cell>
@@ -223,7 +223,7 @@ function MatchDatePicker(props: MatchDatePickerProps) {
     return (
     <DatePicker.Root openOnClick maxWidth="20rem" value={[props.date]} onValueChange={(e) => props.setDate(e.value[0])}>
       <DatePicker.Control>
-        <DatePicker.Input />
+        <DatePicker.Input textAlign='center' />
       </DatePicker.Control>
       <Portal>
         <DatePicker.Positioner>
@@ -398,7 +398,7 @@ export function Matches() {
                 </IconButton>
             </HStack>
             {isLoading ? <Spinner mt='10' size='xl'/> : null}
-            <Flex direction='column' w={{base: '100%', md: '350px'}} gap='5' mb='5'>
+            <Flex direction='column' w={['100%', '450px']} gap='5' mb='5'>
                 {match.map((m, i) => <Match key={i} {...m}/>)}
             </Flex>
             {(!isLoading && match.length === 0) ? <Heading fontSize='1.25rem' color='gray.500' mt='20'>No matches on this day.</Heading> : null}

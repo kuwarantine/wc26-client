@@ -119,7 +119,7 @@ export const GoalIcon = createIcon({
                 </g>
             </g>
         </>
-    ),
+    ), defaultProps: {boxSize: 3}
 });
 
 export const OwnGoalIcon = createIcon({
@@ -180,7 +180,7 @@ export const OwnGoalIcon = createIcon({
                 </g>
             </g>
         </>
-    ),
+    ), defaultProps: {boxSize: 3}
 });
 
 /*export const OwnGoalIcon = createIcon({
@@ -251,7 +251,7 @@ export const YellowCardIcon = createIcon({
                 <rect width="13" height="19" x="5.5" y="2.5" stroke="#DFE1E5" rx="2"/>
             </g>
         </>
-    ),
+    ), defaultProps: {boxSize: 3}
 });
 
 export const RedCardIcon = createIcon({
@@ -265,7 +265,7 @@ export const RedCardIcon = createIcon({
                 <rect width="13" height="19" x="5.5" y="2.5" stroke="#DFE1E5" rx="2"/>
             </g>
         </>
-    ),
+    ), defaultProps: {boxSize: 3}
 });
 
 export const VarIcon = createIcon({
@@ -281,7 +281,7 @@ export const VarIcon = createIcon({
                 </g>
             </g>
         </>
-    ),
+    ), defaultProps: {boxSize: 3}
 });
 
 export const SubIcon = createIcon({
@@ -295,7 +295,7 @@ export const SubIcon = createIcon({
                 <path fill="#259B24" d="M8 2 3 7.078h3.75V16h2.5V7.078H13z"/>
             </g>
         </>
-    ),
+    ), defaultProps: {boxSize: 3}
 });
 
 export const TimeIcon = createIcon({
@@ -308,5 +308,5 @@ export const TimeIcon = createIcon({
                 <path fill="#80868B" fillRule="nonzero" d="M15 1H9v2h6V1Zm-4 13h2V8h-2v6Zm8.03-6.61 1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42A8.962 8.962 0 0 0 12 4a9 9 0 0 0-9 9c0 4.97 4.02 9 9 9a8.994 8.994 0 0 0 7.03-14.61ZM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7Z"/>
             </g>
         </>
-    ),
+    ), defaultProps: {boxSize: 3}
 });

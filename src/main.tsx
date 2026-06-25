@@ -7,6 +7,7 @@ import { GroupTables } from './components/Group.tsx'
 import { Matches } from './components/Match.tsx'
 import { Standings } from './components/Standings.tsx'
 import { Knockout } from './components/Knockout.tsx'
+import { DailyPicks } from './components/DailyPicks.tsx'
 
 const router = createBrowserRouter([
   {
@@ -33,6 +34,10 @@ const router = createBrowserRouter([
         path: 'knockouts',
         element: <Knockout />
       },
+      {
+        path: 'picks',
+        element: <DailyPicks />
+      }
     ],
   },
 ]);

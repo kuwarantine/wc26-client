@@ -12,7 +12,7 @@ interface UserPoints {
 
 interface LastMatchCellProps {
     points: number,
-    isMax: boolean
+    shade: 'green' | 'yellow' | 'none'
 }
 
 function ranksWithTies(standings: UserPoints[]) {
@@ -32,21 +32,21 @@ function ranksWithTies(standings: UserPoints[]) {
 }
 
 function LastMatchCell(props: LastMatchCellProps) {
-    if (props.isMax) {
+    if (props.shade === 'none') {
+        return (
+            <Table.Cell px={[0,3]} textAlign="center" fontSize='inherit'>{props.points}</Table.Cell>
+        );
+    } else {
         return (
             <Table.Cell
                 px={[0,3]}
-                bg='green.subtle'
+                bg={props.shade === 'green' ? 'green.subtle' : 'yellow.subtle'}
                 borderLeft='3px solid'
-                borderLeftColor="green.solid"
+                borderLeftColor={props.shade === 'green' ? 'green.solid' : 'yellow.solid'}
                 fontWeight='semibold'
                 textAlign="center" fontSize='inherit'>
                     {props.points}
             </Table.Cell>
-        );
-    } else {
-        return (
-            <Table.Cell px={[0,3]} textAlign="center" fontSize='inherit'>{props.points}</Table.Cell>
         );
     }   
 }
@@ -87,7 +87,7 @@ export function Standings() {
                             <Table.Cell textAlign='center' px={[0, 3]} fontWeight='bold' key='pos'>{ranks[i]}</Table.Cell>
                             <Table.Cell textAlign='center' px={[0, 3]} key='name'>{user.name}</Table.Cell>
                             <Table.Cell textAlign='center' px={[0, 3]} fontWeight='semibold' key='pts'>{user.points}</Table.Cell>
-                            <LastMatchCell points={user.last_match_points} isMax={user.last_match_points === maxLast} />
+                            <LastMatchCell points={user.last_match_points} shade={user.last_match_points === maxLast ? 'green' : user.last_match_points === 0 ? 'none' : 'yellow'} />
                         </Table.Row>)}
                 </Table.Body>
             </Table.Root>

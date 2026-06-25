@@ -19,7 +19,7 @@ a {
   text-decoration: inherit;
 }
 a:hover {
-  color: #747bff;
+  color: var(--chakra-colors-blue-600)
 }
 
 body {
@@ -45,9 +45,12 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
-button:hover {
-  border-color: #646cff;
+@media (hover: hover) {
+  button:hover {
+    border-color: #646cff;
+  }
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;

@@ -18,14 +18,15 @@ const links = [
   {to: '/standings', title: 'Standings'},
   {to: '/groups', title: 'Groups'},
   {to: '/matches', title: 'Matches'},
-  {to: '/knockouts', title: 'Knockouts'}
+  {to: '/knockouts', title: 'Knockouts'},
+  {to: '/dailypicks', title: 'Picks'}
 ];
 
 function DesktopLinks() {
   return (
-    <HStack justifySelf='center' fontSize='20px' gap={{md: '14px', lg: '24px'}} separator={<Separator borderColor='gray.200' orientation='vertical' height='16' />}>
+    <HStack maxW={{md: '420px', lg: 'max-content'}} justifySelf='center' fontSize={{md: '16px', lg: '18px'}} gap={{md: '14px', lg: '24px'}} separator={<Separator borderColor='gray.200' orientation='vertical' height='16' />}>
       {links.map((l, i) => 
-          <ChakraLink asChild>
+          <ChakraLink asChild justifyContent='center'>
             <RouterLink key={i} to={l.to}>{l.title}</RouterLink>
           </ChakraLink>)
       }
@@ -77,7 +78,7 @@ function MenuDrawer() {
 
 function NavBar() {
   return (
-    <Box as='header' position='sticky' top='0px' maxH='110px' borderBottom='1px solid' borderColor='gray.200' backgroundColor='whiteAlpha.800' backdropFilter='saturate(180%) blur(3px)' style={{zIndex: 200}}>
+    <Box as='header' position='sticky' top='0px' maxH='110px' borderBottom='1px solid' borderColor='gray.200' backgroundColor='white/80' backdropFilter='saturate(180%) blur(3px)' zIndex={200}>
       <Flex mx='auto' position='relative' px={[4, 4]} py={[3, 3]} maxW='1280px'>
           <Box display='contents' hideFrom='md'>
             <LastUpdate />
@@ -104,7 +105,7 @@ function App() {
   return (
     <ChakraProvider value={defaultSystem}>
       <NavBar />
-      <Box maxWidth='1280px' h='100%' mx='auto' my='2' px='5'>
+      <Box maxWidth='1280px' mx='auto' my='2' px='5'>
         <Outlet />
       </Box>
     </ChakraProvider>
