@@ -19,7 +19,7 @@ const links = [
   {to: '/groups', title: 'Groups'},
   {to: '/matches', title: 'Matches'},
   {to: '/knockouts', title: 'Knockouts'},
-  {to: '/dailypicks', title: 'Picks'}
+  {to: '/picks', title: 'Picks'}
 ];
 
 function DesktopLinks() {
