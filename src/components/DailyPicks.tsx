@@ -91,7 +91,8 @@ function MatchTabs(props: MatchTabsProps) {
                 }}
             >
                 {matches.map((m) =>
-                    <Tabs.Trigger color='gray.700' bg='transparent' value={`${m.match_id}`} key={m.match_id} flexShrink={0} h='auto'>
+                    <Tabs.Trigger color='gray.700' bg='transparent' value={`${m.match_id}`} key={m.match_id} flexShrink={0} h='auto'
+                                  _hover={props.tab === `${m.match_id}` ? {} : {borderRadius: 'full', bg: 'gray.200/50', outline: 'none' }}>
                         <VStack gap='0'>
                             <Flag countryCode={COUNTRIES[m.home_id].flag_code} w={['20px', '30px']}/>
                             {COUNTRIES[m.home_id].fifa_code}

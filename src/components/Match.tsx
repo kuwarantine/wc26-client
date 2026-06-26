@@ -334,7 +334,7 @@ function Match(props: MatchProps) {
                 </Flex>
                 <Accordion.Root w='100%' collapsible>
                     <Accordion.Item value="details" border='white'>
-                        <Accordion.ItemTrigger justifyContent='center'>
+                        <Accordion.ItemTrigger justifyContent='center' bg='gray.100' _hover={{bg: 'gray.200'}}>
                             <Text fontSize='0.8rem' color='gray.800'>Details</Text>
                             <Accordion.ItemIndicator />
                         </Accordion.ItemTrigger>
@@ -389,11 +389,13 @@ export function Matches() {
     return (
         <VStack>
             <HStack>
-                <IconButton aria-label='Previous' onClick={prevDate} color='gray.500' backgroundColor='gray.100' borderColor='gray.200'>
+                <IconButton aria-label='Previous' 
+                            onClick={prevDate} color='gray.500' backgroundColor='gray.100' borderColor='gray.200' _hover={{bg: 'gray.200'}}>
                     <FaChevronLeft />
                 </IconButton>
                 <MatchDatePicker date={date} setDate={setDate}/>
-                <IconButton aria-label='Next' onClick={nextDate} color='gray.500' backgroundColor='gray.100' borderColor='gray.200'>
+                <IconButton aria-label='Next'
+                            onClick={nextDate} color='gray.500' backgroundColor='gray.100' borderColor='gray.200' _hover={{bg: 'gray.200'}}>
                     <FaChevronRight />
                 </IconButton>
             </HStack>
