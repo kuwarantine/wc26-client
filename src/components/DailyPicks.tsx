@@ -31,24 +31,26 @@ interface MatchTabsProps {
 }
 
 function ScoreComponent(pick: Pick) {
+    const pastFT = (pick.home_et !== null && pick.away_et !== null);
+    const pastET = pastFT && (pick.home_pen !== null && pick.away_pen !== null);
     const FT = `${pick.home_score} - ${pick.away_score}`;
-    const ET = pick.home_et ? `${pick.home_et} - ${pick.away_et}` : null;
-    const PEN = pick.home_pen ? `${pick.home_pen} - ${pick.away_pen}` : null;
+    const ET = pastFT ? `${pick.home_et} - ${pick.away_et}` : null;
+    const PEN = pastET ? `${pick.home_pen} - ${pick.away_pen}` : null;
 
     return (
         <Grid justifyContent='center' justifyItems='start' templateColumns='max-content max-content' gap='6px 12px'>
             <Text fontFamily='mono'>{FT}</Text>
-            <Badge variant='surface' colorPalette={pick.home_et ? 'gray' : 'blue'} opacity={pick.home_et ? 0.6 : 1}>FT</Badge>
+            <Badge variant='surface' colorPalette={pastFT ? 'gray' : 'blue'} opacity={pastFT ? 0.6 : 1}>FT</Badge>
 
-            {pick.home_et ?
+            {pastFT ?
             <>
                 <Text fontFamily='mono'>{ET}</Text>
-                <Badge variant='surface' colorPalette={pick.home_pen ? 'gray' : 'blue'} opacity={pick.home_pen ? 0.6 : 1}>ET</Badge>
+                <Badge variant='surface' colorPalette={pastET ? 'gray' : 'blue'} opacity={pastET? 0.6 : 1}>ET</Badge>
             </>
             : null
             }
 
-            {pick.home_pen ?
+            {pastET ?
             <>
                 <Text fontFamily='mono'>{PEN}</Text>
                 <Badge variant='surface' colorPalette='blue'>PEN</Badge>
