@@ -12,7 +12,7 @@ function shouldForwardProp(prop: string) {
 }
 
 export function BaseFlag(props: FlagProps) {
-    if (!props.countryCode) { return null; }
+    if (!props.countryCode || props.countryCode === '') { return <></>; }
 
     const key = props.countryCode as keyof typeof Flags;
     const FlagComponent = Flags[key];
