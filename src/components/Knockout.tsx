@@ -1,8 +1,9 @@
-import { VStack, Text, Flex, Separator, Spacer, Box, HStack, SegmentGroup } from "@chakra-ui/react";
+import { VStack, Text, Flex, Separator, Spacer, Box, HStack, SegmentGroup, Icon } from "@chakra-ui/react";
 import { Dispatch, SetStateAction, useEffect, useMemo, useRef, useState } from "react";
 import { API_URL } from "../lib/Constants";
 import { Flag } from "./Flag";
 import { COUNTRIES } from "../lib/Countries";
+import { FaCaretLeft } from "react-icons/fa";
 
 const ROUND_NAMES: Record<number,string> = {
     2: 'Round of 32',
@@ -35,6 +36,8 @@ interface BracketMatchData {
     awayET: number | null,
     homePen: number | null,
     awayPen: number | null,
+    winnerID: number | null,
+    finishCode: string | null,
     matchNumber: number
 }
 
@@ -56,6 +59,8 @@ interface KnockoutMatchProps {
 interface RoundsHeaderProps {
     focusRound: number,
     setFocusRound: Dispatch<SetStateAction<number>>,
+    segmentBarRef: React.RefObject<HTMLDivElement | null>,
+    rounds: BracketRoundData[]
 }
 
 const emptyBMData = (r: number, m: number) => {
@@ -70,6 +75,8 @@ const emptyBMData = (r: number, m: number) => {
         awayET: null,
         homePen: null,
         awayPen: null,
+        winnerID: null,
+        finishCode: null,
         matchNumber: m
     };
 }
@@ -103,30 +110,47 @@ function KnockoutMatch({data}: KnockoutMatchProps) {
     const home_name = data.homeID ? COUNTRIES[data.homeID].name : 'TBD';
     const away_name = data.awayID ? COUNTRIES[data.awayID].name : 'TBD';
 
-    const home_score_text = (data.homeScore !== null) ? `${data.homeET ?? data.homeScore}${(data.homePen !== null) ? `(${data.homePen})` : ''}` : '-';
-    const away_score_text = (data.awayScore !== null) ? `${data.awayET ?? data.awayScore}${(data.awayPen !== null) ? `(${data.awayPen})` : ''}` : '-';
+    const finished = data.finishCode !== null;
+    const home_win = finished && data.winnerID === data.homeID;
+    const away_win = finished && data.winnerID === data.awayID;
+
+    const home_score_text = (data.finishCode !== null) ? `${data.homeET ?? data.homeScore}${(data.homePen !== null) ? ` (${data.homePen})` : ''}` : '-';
+    const away_score_text = (data.finishCode !== null) ? `${data.awayET ?? data.awayScore}${(data.awayPen !== null) ? ` (${data.awayPen})` : ''}` : '-';
 
     return (
-        <Box w='full' h={`${CARD_HEIGHT}px`} border='1px solid' borderColor='gray.200' borderRadius='md' px='2' pt='1' pb='2' fontSize='0.8rem' whiteSpace='nowrap'>
+        <Box w='full' h={`${CARD_HEIGHT}px`} border='1px solid' borderColor='gray.200' borderRadius='md' px='2.5' pt='1' pb='2' fontSize='0.8rem' whiteSpace='nowrap'>
             <VStack gap='0' h='100%'>
-                <Flex w='100%' mb='1' fontSize='0.7rem' color='gray.600'>
-                    <Text fontWeight='600'>Match {data.matchNumber}</Text>
+                <Flex w='100%' mb='1' fontSize='0.7rem'>
+                    <Text fontWeight='600' color='gray.600'>Match {data.matchNumber}</Text>
                     <Spacer />
-                    <Text>{data.date ? getFormattedDate(data.date) : ''}</Text>
+                    <Text fontWeight={finished ? '600' : 'normal'} 
+                        color={finished ? 'gray.800' : 'gray.600'}>
+                        {finished ? data.finishCode : (data.date ? getFormattedDate(data.date) : '')}
+                    </Text>
                 </Flex>
-                <Flex gap='2' mt='auto' align='stretch' direction='column' w='100%' fontWeight='bold' color='gray.700'>
-                    <Flex gap='1'>
+                <Flex gap='2' mt='auto' align='stretch' direction='column' w='100%' fontWeight='bold'>
+                    <Flex position='relative' gap='1' color={away_win ? 'gray.500' : 'gray.800'}>
                         <Flag countryCode={home_flag_code} w='28px'/>
                         {home_name}
-                        <Spacer minW='2rem'/>
+                        <Spacer />
                         <Text>{home_score_text}</Text>
+                        {home_win ? 
+                            <Icon color='gray.800' size='md' position='absolute' right='-17px'>
+                                <FaCaretLeft />
+                            </Icon>
+                        : <></>}
                     </Flex>
                     <Separator orientation='horizontal' />
-                    <Flex gap='1'>
+                    <Flex position='relative' gap='1' color={home_win ? 'gray.500' : 'gray.800'}>
                         <Flag countryCode={away_flag_code} w='28px'/>
                         {away_name}
-                        <Spacer minW='2rem'/>
+                        <Spacer />
                         <Text>{away_score_text}</Text>
+                        {away_win ? 
+                            <Icon color='gray.800' size='md' position='absolute' right='-17px'>
+                                <FaCaretLeft />
+                            </Icon>
+                        : <></>}
                     </Flex>
                 </Flex>
             </VStack>
@@ -140,29 +164,15 @@ function RoundsHeader(props: RoundsHeaderProps) {
             <Flex overflowX='auto' backgroundColor='white/80' backdropFilter='saturate(180%) blur(3px)'
                 maxW='100%' justifySelf='center' css={{scrollbarWidth: 'none'}}
                 borderWidth='0px 1px 2px 1px' borderBottomRadius='md' borderBottomColor='blue.border'
-                shadow='0 5px 10px -5px rgba(0, 0, 0, 0.4)'>
+                shadow='0 5px 10px -5px rgba(0, 0, 0, 0.4)' ref={props.segmentBarRef}>
                 <SegmentGroup.Root p='1' value={`${props.focusRound}`} onValueChange={(e) => props.setFocusRound(parseInt(e.value ?? '2'))}
-                    fontWeight='bold' bg='transparent'>
-                    <SegmentGroup.Item key={2} value={'2'} color='gray.700' fontSize={['12px','14px']}>
-                        Round of 32
-                        <SegmentGroup.ItemHiddenInput />
-                    </SegmentGroup.Item>
-                    <SegmentGroup.Item key={3} value={'3'} color='gray.700' fontSize={['12px','14px']}>
-                        Round of 16
-                        <SegmentGroup.ItemHiddenInput />
-                    </SegmentGroup.Item>
-                    <SegmentGroup.Item key={4} value={'4'} color='gray.700' fontSize={['12px','14px']}>
-                        Quarter-finals
-                        <SegmentGroup.ItemHiddenInput />
-                    </SegmentGroup.Item>
-                    <SegmentGroup.Item key={5} value={'5'} color='gray.700' fontSize={['12px','14px']}>
-                        Semi-finals
-                        <SegmentGroup.ItemHiddenInput />
-                    </SegmentGroup.Item>
-                    <SegmentGroup.Item key={6} value={'6'} color='gray.700' fontSize={['12px','14px']}>
-                        Final
-                        <SegmentGroup.ItemHiddenInput />
-                    </SegmentGroup.Item>
+                    fontWeight='bold' bg='transparent' boxShadow='none'>
+                        {props.rounds.map((r) => (
+                            <SegmentGroup.Item key={r.id} value={`${r.id}`} color='gray.700' fontSize={['12px','14px']} focusRing='none'>
+                                {r.name}
+                                <SegmentGroup.ItemHiddenInput />
+                            </SegmentGroup.Item>
+                        ))}
                     <SegmentGroup.Indicator shadow='sm' bg='rgba(0, 110, 255, 0.25)' borderRadius='full' border="1px solid" borderColor='white/60'/>
                 </SegmentGroup.Root>
             </Flex>
@@ -261,6 +271,7 @@ export function Knockout() {
     const [matches, setMatches] = useState<BracketMatchData[]>(defaultBM());
     const [focusRound, setFocusRound] = useState(2);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const segmentBarRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -287,16 +298,51 @@ export function Knockout() {
     useEffect(() => {
         const roundEl = document.getElementById(`round-${focusRound}`);
         const container = scrollContainerRef.current!
-        const left = roundEl ? Math.max(roundEl.offsetLeft - 12, 0) : 0;
-        container.scrollTo({left: left, behavior: 'smooth'})
-        window.scrollTo({top: 0, behavior: 'smooth'});
+        const roundLeft = roundEl ? Math.max(roundEl.offsetLeft - 12, 0) : 0;
+        container.scrollTo({left: roundLeft, behavior: 'smooth'});
+        //window.scrollTo({top: 0, behavior: 'smooth'});
 
+        const segmentBar = segmentBarRef.current!
+        const segmentEl = segmentBar.querySelector(`[value="${focusRound}"]`)?.parentElement as HTMLElement | null;
+        const segmentLeft = segmentEl ? segmentEl.offsetLeft - (segmentBar.offsetWidth/2) + (segmentEl.offsetWidth/2) : 0;
+        segmentBar.scrollTo({left: segmentLeft, behavior: 'smooth'});
     }, [focusRound]);
+
+    const touchStartX = useRef<number | null>(null);
+    const touchStartY = useRef<number | null>(null);
+    const SWIPE_THRESHOLD = 50;
+    const handleTouchStart = (e: React.TouchEvent) => {
+        touchStartX.current = e.targetTouches[0].clientX;
+        touchStartY.current = e.targetTouches[0].clientY;
+    };
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        if (touchStartX.current === null || touchStartY.current === null) { return; }
+
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const diffX = touchEndX - touchStartX.current;
+        const diffY = touchEndY - touchStartY.current;
+        touchStartX.current = null;
+        touchStartY.current = null;
+
+        if (Math.abs(diffY) > Math.abs(diffX)) { return; }
+
+        if (Math.abs(diffX) > SWIPE_THRESHOLD) {
+            if (diffX > 0) {
+                setFocusRound(Math.max(2, focusRound-1));
+            } else {
+                setFocusRound(Math.min(6, focusRound+1));
+            }
+        }
+    };
 
     return (
         <Flex position='relative' direction='column' gap='5'>
-            <RoundsHeader focusRound={focusRound} setFocusRound={setFocusRound} />
-            <Box position='relative' overflow='hidden' css={{ touchAction: 'pan-y'}} w='100%' h={FOCUSED_HEIGHTS[focusRound]} ref={scrollContainerRef}>
+            <RoundsHeader focusRound={focusRound} setFocusRound={setFocusRound} segmentBarRef={segmentBarRef} rounds={rounds}/>
+            <Box position='relative' overflow='hidden' css={{ touchAction: 'pan-y'}} w='100%' h={FOCUSED_HEIGHTS[focusRound]} minH='100vh' 
+                ref={scrollContainerRef}
+                onTouchStart={(e) => handleTouchStart(e)}
+                onTouchEnd={(e) => handleTouchEnd(e)}>
                 <svg
                     style={{
                         position: 'absolute',
