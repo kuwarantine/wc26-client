@@ -46,6 +46,11 @@ button {
   transition: border-color 0.25s;
 }
 
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+:focus-visible {
+  outline: 2px solid -webkit-focus-ring-color;
 }

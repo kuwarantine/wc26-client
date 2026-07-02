@@ -2,7 +2,7 @@ import './App.css';
 import { Box, ChakraProvider, Flex, Image, VStack, Link as ChakraLink, Spacer, HStack, Separator, IconButton, Drawer,
   CloseButton, Portal, defaultSystem, AbsoluteCenter, useDrawerContext } from '@chakra-ui/react';
 import { IoMenu } from 'react-icons/io5';
-import { Outlet, Link as RouterLink } from 'react-router-dom';
+import { Outlet, NavLink } from 'react-router-dom';
 import { LastUpdate } from './components/Match';
 
 
@@ -24,10 +24,13 @@ const links = [
 
 function DesktopLinks() {
   return (
-    <HStack maxW={{md: '420px', lg: 'max-content'}} justifySelf='center' fontSize={{md: '16px', lg: '18px'}} gap={{md: '14px', lg: '24px'}} separator={<Separator borderColor='gray.200' orientation='vertical' height='16' />}>
+    <HStack maxW={{md: '420px', lg: 'max-content'}} justifySelf='center' fontSize={{md: '16px', lg: '18px'}} gap='2px'
+            separator={<Separator borderColor='gray.200' orientation='vertical' height='16' />}>
       {links.map((l, i) => 
-          <ChakraLink asChild justifyContent='center'>
-            <RouterLink key={i} to={l.to}>{l.title}</RouterLink>
+          <ChakraLink asChild justifyContent='center' py='2' px={{md: '7px', lg:'12px'}} borderRadius='full'
+          _currentPage={{shadow: 'sm', bg:'rgba(0, 110, 255, 0.25)', border:"1px solid", borderColor:'white/60'}}
+          _hover={{"&:not([aria-current='page'])": {bg: 'gray.200/50', outline: 'none'}}}>
+            <NavLink key={i} to={l.to}>{l.title}</NavLink>
           </ChakraLink>)
       }
     </HStack>
@@ -41,7 +44,7 @@ function MobileLinks() {
     <VStack fontSize='20px' gap='24px' separator={<Separator borderColor='gray.200' width='50%' />}>
       {links.map((l, i) => 
         <ChakraLink key={i} asChild>
-          <RouterLink to={l.to} onClick={() => drawer.setOpen(false)}>{l.title}</RouterLink>
+          <NavLink to={l.to} onClick={() => drawer.setOpen(false)}>{l.title}</NavLink>
         </ChakraLink>)}
     </VStack>
   );

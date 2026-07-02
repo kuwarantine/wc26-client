@@ -160,16 +160,16 @@ function KnockoutMatch({data}: KnockoutMatchProps) {
 
 function RoundsHeader(props: RoundsHeaderProps) {
     return (
-        <Box mt='-2' position='sticky' top={['84px', '100px', '110px']} zIndex={100}>
+        <Box maxW='100%' mx='auto' mt='-2' position='sticky' top={['84px', '100px', '110px']} zIndex={100}>
             <Flex overflowX='auto' backgroundColor='white/80' backdropFilter='saturate(180%) blur(3px)'
-                maxW='100%' justifySelf='center' css={{scrollbarWidth: 'none'}}
+                css={{scrollbarWidth: 'none'}}
                 borderWidth='0px 1px 2px 1px' borderBottomRadius='md' borderBottomColor='blue.border'
                 shadow='0 5px 10px -5px rgba(0, 0, 0, 0.4)' ref={props.segmentBarRef}>
                 <SegmentGroup.Root p='1' value={`${props.focusRound}`} onValueChange={(e) => props.setFocusRound(parseInt(e.value ?? '2'))}
                     fontWeight='bold' bg='transparent' boxShadow='none'>
                         {props.rounds.map((r) => (
-                            <SegmentGroup.Item key={r.id} value={`${r.id}`} color='gray.700' fontSize={['12px','14px']} focusRing='none'>
-                                {r.name}
+                            <SegmentGroup.Item key={r.id} value={`${r.id}`} color='gray.700' fontSize={['12px','14px']} px='1' cursor='pointer' _focusVisible={{outline: '2px solid -webkit-focus-ring-color'}}>
+                                <SegmentGroup.ItemText p='2' _hover={props.focusRound === r.id ? {} : {borderRadius: 'full', bg: 'gray.200/50', outline: 'none' }}>{r.name}</SegmentGroup.ItemText> 
                                 <SegmentGroup.ItemHiddenInput />
                             </SegmentGroup.Item>
                         ))}
@@ -182,10 +182,9 @@ function RoundsHeader(props: RoundsHeaderProps) {
 
 function KnockoutRound(props: KnockoutRoundProps) {
     return (
-        <VStack id={`round-${props.round.id}`} w={`${ROUND_WIDTH}px`} gap={0}
-                align='stretch' transition='all 200ms ease'>
+        <VStack id={`round-${props.round.id}`} w={`${ROUND_WIDTH}px`} gap={0} align='stretch'>
             {props.round.matches.map((m,i) =>
-                <Flex key={i} h={`${props.slotHeight-GAP}px`} mb={`${GAP}px`} align='center'>
+                <Flex key={i} h={`${props.slotHeight-GAP}px`} mb={`${GAP}px`} align='center' transition='all 200ms ease'>
                     <KnockoutMatch key={i} data={m} />
                 </Flex>
             )}
@@ -340,7 +339,7 @@ export function Knockout() {
         <Flex position='relative' direction='column' gap='5'>
             <RoundsHeader focusRound={focusRound} setFocusRound={setFocusRound} segmentBarRef={segmentBarRef} rounds={rounds}/>
             <Box position='relative' overflow='hidden' css={{ touchAction: 'pan-y'}} w='100%' h={FOCUSED_HEIGHTS[focusRound]} minH='100vh' 
-                ref={scrollContainerRef}
+                ref={scrollContainerRef} transition='all 200ms ease'
                 onTouchStart={(e) => handleTouchStart(e)}
                 onTouchEnd={(e) => handleTouchEnd(e)}>
                 <svg
