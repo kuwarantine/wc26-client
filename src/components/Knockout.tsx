@@ -88,6 +88,20 @@ function timeString(time: number | null, extra: number | null) {
     }
 }
 
+function getFormattedDate(date: number) {
+    const options: Intl.DateTimeFormatOptions = {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: false
+    }
+
+    const out = new Intl.DateTimeFormat(undefined, options).format(date);
+
+    return out;
+}
+
 function KnockoutMatch({data}: KnockoutMatchProps) {
     const home_flag_code = data.homeID ? COUNTRIES[data.homeID].flag_code : '';
     const away_flag_code = data.awayID ? COUNTRIES[data.awayID].flag_code : '';
@@ -105,6 +119,8 @@ function KnockoutMatch({data}: KnockoutMatchProps) {
 
     const topRightText = (status: string) => {
         switch(status) {
+            case 'NS':
+                return (data.date ? getFormattedDate(data.date) : '');
             case '1H':
             case '2H':
             case 'ET':
