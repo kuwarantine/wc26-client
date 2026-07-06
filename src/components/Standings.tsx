@@ -6,8 +6,6 @@ import { useLiveContext, UserPoints } from "../LiveMatchContext";
 
 const columns = ['', 'Team Name', '', 'Points', '+'];
 
-
-
 interface LastMatchCellProps {
     points: number,
     shade: 'green' | 'yellow' | 'none'
@@ -85,10 +83,9 @@ export function Standings() {
         fetchData();
     }, [liveStandings]);
 
-    const ranks = ranksWithTies(standings);
-    const maxLast = standings.reduce((max, u) => Math.max(max, u.new_points), 0);
-
     const displayedStandings = liveStandings ?? standings;
+    const ranks = ranksWithTies(displayedStandings);
+    const maxLast = displayedStandings.reduce((max, u) => Math.max(max, u.new_points), 0);
 
     return (
         <Box>
