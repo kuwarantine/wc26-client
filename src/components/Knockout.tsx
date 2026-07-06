@@ -5,7 +5,7 @@ import { Flag } from "./Flag";
 import { COUNTRIES } from "../lib/Countries";
 import { FaCaretLeft } from "react-icons/fa";
 import { LiveBadge } from "./LiveBadge";
-import { useLiveMatch, MatchData } from "../LiveMatchContext";
+import { useLiveContext, MatchData } from "../LiveMatchContext";
 
 const ROUND_NAMES: Record<number,string> = {
     2: 'Round of 32',
@@ -296,7 +296,7 @@ export function Knockout() {
     const [focusRound, setFocusRound] = useState(2);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const segmentBarRef = useRef<HTMLDivElement>(null);
-    const live = useLiveMatch();
+    const live = useLiveContext()?.matchData;
 
     useEffect(() => {
         const fetchData = async () => {

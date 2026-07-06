@@ -1,14 +1,12 @@
-import { Table, SkeletonText, Box } from "@chakra-ui/react";
+import { Table, SkeletonText, Box, Icon } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { API_URL } from "../lib/Constants";
+import { VscDash, VscTriangleDown, VscTriangleUp } from "react-icons/vsc";
+import { useLiveContext, UserPoints } from "../LiveMatchContext";
 
-const columns = ['', 'Team Name', 'Points', '+'];
+const columns = ['', 'Team Name', '', 'Points', '+'];
 
-interface UserPoints {
-    name: string,
-    points: number,
-    last_match_points: number
-}
+
 
 interface LastMatchCellProps {
     points: number,
@@ -51,10 +49,24 @@ function LastMatchCell(props: LastMatchCellProps) {
     }   
 }
 
+function ChangeIcon(current: number, previous: number) {
+    return (
+        <>
+            {current < previous && <Icon color='green' ><VscTriangleUp /></Icon>}
+            {current > previous && <Icon color='red'><VscTriangleDown /></Icon>}
+            {current === previous && <Icon color='gray'><VscDash /></Icon>}
+        </>
+    );
+}
+
 export function Standings() {
     const [standings, setStandings] = useState<UserPoints[]>([]);
     const [loading, setLoading] = useState(true);
+    const liveStandings = useLiveContext()?.standings;
+
     useEffect(() => {
+        if (liveStandings) return;
+
         const fetchData = async () => {
             try {
                 setLoading(true);
@@ -68,10 +80,12 @@ export function Standings() {
         }
 
         fetchData();
-    }, []);
+    }, [liveStandings]);
 
     const ranks = ranksWithTies(standings);
-    const maxLast = standings.reduce((max, u) => Math.max(max, u.last_match_points), 0)
+    const maxLast = standings.reduce((max, u) => Math.max(max, u.new_points), 0);
+
+    const displayedStandings = liveStandings ?? standings;
 
     return (
         <Box>
@@ -82,12 +96,13 @@ export function Standings() {
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    {standings.map((user, i) => 
+                    {displayedStandings.map((user, i) => 
                         <Table.Row key={i}>
                             <Table.Cell textAlign='center' px={[0, 3]} fontWeight='bold' key='pos'>{ranks[i]}</Table.Cell>
                             <Table.Cell textAlign='center' px={[0, 3]} key='name'>{user.name}</Table.Cell>
+                            <Table.Cell textAlign='center' px={[0, 3]} key='change'>{ChangeIcon(user.current_rank, user.previous_rank)}</Table.Cell>
                             <Table.Cell textAlign='center' px={[0, 3]} fontWeight='semibold' key='pts'>{user.points}</Table.Cell>
-                            <LastMatchCell points={user.last_match_points} shade={user.last_match_points === maxLast ? 'green' : user.last_match_points === 0 ? 'none' : 'yellow'} />
+                            <LastMatchCell points={user.new_points} shade={user.new_points === maxLast ? 'green' : user.new_points === 0 ? 'none' : 'yellow'} />
                         </Table.Row>)}
                 </Table.Body>
             </Table.Root>

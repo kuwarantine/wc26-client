@@ -7,7 +7,7 @@ import { API_URL } from "../lib/Constants";
 import { Flag } from "./Flag";
 import { LiveBadge } from "./LiveBadge";
 import { COUNTRIES } from "../lib/Countries";
-import { useLiveMatch, MatchData, MatchEvent } from "../LiveMatchContext";
+import { useLiveContext, MatchData, MatchEvent } from "../LiveMatchContext";
 
 const emptyMatch = () => {
     return {
@@ -222,7 +222,7 @@ function MatchDatePicker(props: MatchDatePickerProps) {
 }
 
 export function LastUpdate() {
-    const liveMatch = useLiveMatch();
+    const liveMatch = useLiveContext()?.matchData;
     const [lastMatch, setLastMatch] = useState<MatchData>(emptyMatch());
 
     useEffect(() => {
@@ -380,7 +380,7 @@ export function Matches() {
     const [matches, setMatches] = useState<MatchData[]>([]);
     const [date, setDate] = useState<DateValue>(today(localTZ));
     const [isLoading, setIsLoading] = useState(true);
-    const live = useLiveMatch();
+    const live = useLiveContext()?.matchData;
     
 
     useEffect(() => {

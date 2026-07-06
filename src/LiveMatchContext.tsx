@@ -30,10 +30,23 @@ export interface MatchData {
     awayEvents: MatchEvent[]
 }
 
-const LiveMatchContext = createContext<MatchData | null>(null);
+export interface UserPoints {
+    name: string,
+    points: number,
+    new_points: number,
+    current_rank: number,
+    previous_rank: number
+}
+
+interface LivePayload {
+    matchData: MatchData,
+    standings: UserPoints[]
+}
+
+const LiveMatchContext = createContext<LivePayload | null>(null);
 
 export function LiveMatchProvider({children}: {children: ReactNode}) {
-    const [match, setMatch] = useState<MatchData | null>(null);
+    const [payload, setPayload] = useState<LivePayload | null>(null);
 
     useEffect(() => {
         let timerId: ReturnType<typeof setTimeout> | null = null;
@@ -45,7 +58,7 @@ export function LiveMatchProvider({children}: {children: ReactNode}) {
             const handleUpdate = (event: MessageEvent) => {
                 try {
                     const payload = JSON.parse(event.data);
-                    setMatch(payload.matchData);
+                    setPayload(payload);
                 } catch (err) {
                     console.error(err);
                 }
@@ -53,7 +66,7 @@ export function LiveMatchProvider({children}: {children: ReactNode}) {
 
             const handleDowntime = (event: MessageEvent) => {
                 const payload = JSON.parse(event.data);
-                setMatch(null);
+                setPayload(null);
                 cleanup();
 
                 if (payload.timeToNext) {
@@ -92,10 +105,10 @@ export function LiveMatchProvider({children}: {children: ReactNode}) {
     }, []);
 
     return (
-        <LiveMatchContext.Provider value={match}>
+        <LiveMatchContext.Provider value={payload}>
             {children}
         </LiveMatchContext.Provider>
     );
 }
 
-export const useLiveMatch = () => useContext(LiveMatchContext);
+export const useLiveContext = () => useContext(LiveMatchContext);
