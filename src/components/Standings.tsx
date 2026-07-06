@@ -65,7 +65,10 @@ export function Standings() {
     const liveStandings = useLiveContext()?.standings;
 
     useEffect(() => {
-        if (liveStandings) return;
+        if (liveStandings) {
+            setLoading(false);
+            return;
+        }
 
         const fetchData = async () => {
             try {
