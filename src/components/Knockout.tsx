@@ -4,6 +4,8 @@ import { API_URL } from "../lib/Constants";
 import { Flag } from "./Flag";
 import { COUNTRIES } from "../lib/Countries";
 import { FaCaretLeft } from "react-icons/fa";
+import { LiveBadge } from "./LiveBadge";
+import { useLiveMatch, MatchData } from "../LiveMatchContext";
 
 const ROUND_NAMES: Record<number,string> = {
     2: 'Round of 32',
@@ -25,26 +27,10 @@ const FOCUSED_HEIGHTS: Record<number, number> = {
     6: CARD_HEIGHT
 }
 
-interface BracketMatchData {
-    date: number | null,
-    round: number,
-    homeID: number | null,
-    awayID: number | null,
-    homeScore: number | null,
-    awayScore: number | null,
-    homeET: number | null,
-    awayET: number | null,
-    homePen: number | null,
-    awayPen: number | null,
-    winnerID: number | null,
-    finishCode: string | null,
-    matchNumber: number
-}
-
 type BracketRoundData = {
     id: number,
     name: string,
-    matches: BracketMatchData[]
+    matches: MatchData[]
 }
 
 interface KnockoutRoundProps {
@@ -53,7 +39,7 @@ interface KnockoutRoundProps {
 }
 
 interface KnockoutMatchProps {
-    data: BracketMatchData
+    data: MatchData
 }
 
 interface RoundsHeaderProps {
@@ -65,19 +51,23 @@ interface RoundsHeaderProps {
 
 const emptyBMData = (r: number, m: number) => {
     return {
-        date: null,
+        date: 0,
+        elapsed: null,
+        extra: null,
         round: r,
         homeID: null,
         awayID: null,
-        homeScore: null,
-        awayScore: null,
+        homeScore: 0,
+        awayScore: 0,
         homeET: null,
         awayET: null,
         homePen: null,
         awayPen: null,
         winnerID: null,
-        finishCode: null,
-        matchNumber: m
+        status: 'NS',
+        number: m,
+        homeEvents: [],
+        awayEvents: []
     };
 }
 
@@ -90,18 +80,12 @@ const defaultBM = () => {
     ];
 }
 
-function getFormattedDate(date: number) {
-    const options: Intl.DateTimeFormatOptions = {
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: false
+function timeString(time: number | null, extra: number | null) {
+    if (extra !== null) {
+        return `${time}+${extra}'`;
+    } else {
+        return `${time}'`;
     }
-
-    const out = new Intl.DateTimeFormat(undefined, options).format(date);
-
-    return out;
 }
 
 function KnockoutMatch({data}: KnockoutMatchProps) {
@@ -110,22 +94,47 @@ function KnockoutMatch({data}: KnockoutMatchProps) {
     const home_name = data.homeID ? COUNTRIES[data.homeID].name : 'TBD';
     const away_name = data.awayID ? COUNTRIES[data.awayID].name : 'TBD';
 
-    const finished = data.finishCode !== null;
+    const started = data.status !== 'NS';
+    const finished = (data.status === 'FT' || data.status === 'AET' || data.status === 'PEN');
+    const live = started && !finished;
     const home_win = finished && data.winnerID === data.homeID;
     const away_win = finished && data.winnerID === data.awayID;
 
-    const home_score_text = (data.finishCode !== null) ? `${data.homeET ?? data.homeScore}${(data.homePen !== null) ? ` (${data.homePen})` : ''}` : '-';
-    const away_score_text = (data.finishCode !== null) ? `${data.awayET ?? data.awayScore}${(data.awayPen !== null) ? ` (${data.awayPen})` : ''}` : '-';
+    const home_score_text = started ? `${data.homeET ?? data.homeScore}${(data.homePen !== null) ? ` (${data.homePen})` : ''}` : '-';
+    const away_score_text = started ? `${data.awayET ?? data.awayScore}${(data.awayPen !== null) ? ` (${data.awayPen})` : ''}` : '-';
+
+    const topRightText = (status: string) => {
+        switch(status) {
+            case '1H':
+            case '2H':
+            case 'ET':
+            case 'LIVE':
+                return timeString(data.elapsed, data.extra);
+            case 'HT':
+                return 'HT';
+            case 'BT':
+                return 'ET Break';
+            case 'P':
+            case 'PEN':
+                return `PEN`;
+            case 'FT':
+            case 'AET':
+                return status;
+            default:
+                return '';
+        }
+    }
 
     return (
         <Box w='full' h={`${CARD_HEIGHT}px`} border='1px solid' borderColor='gray.200' borderRadius='md' px='2.5' pt='1' pb='2' fontSize='0.8rem' whiteSpace='nowrap'>
             <VStack gap='0' h='100%'>
-                <Flex w='100%' mb='1' fontSize='0.7rem'>
-                    <Text fontWeight='600' color='gray.600'>Match {data.matchNumber}</Text>
+                <Flex w='100%' mb='1' fontSize='0.7rem' gap='1'>
+                    <Text fontWeight='600' color='gray.600'>Match {data.number}</Text>
                     <Spacer />
-                    <Text fontWeight={finished ? '600' : 'normal'} 
-                        color={finished ? 'gray.800' : 'gray.600'}>
-                        {finished ? data.finishCode : (data.date ? getFormattedDate(data.date) : '')}
+                    {live ? <LiveBadge /> : <></>}
+                    <Text fontWeight={started ? '600' : 'normal'} 
+                        color={started ? 'gray.800' : 'gray.600'}>
+                        {topRightText(data.status)}
                     </Text>
                 </Flex>
                 <Flex gap='2' mt='auto' align='stretch' direction='column' w='100%' fontWeight='bold'>
@@ -216,8 +225,8 @@ const SF = [101, 102];
 const F = [104];
 const ROUNDS = [R32, R16, QF, SF, F];
 
-function getBMData(matches: Map<string,BracketMatchData>) {
-    const BMData: BracketMatchData[] = [];
+function getBMData(matches: Map<string,MatchData>) {
+    const BMData: MatchData[] = [];
     for (let i=0; i<ROUNDS.length; i++) {
         const round = ROUNDS[i];
         for (const match of round) {
@@ -228,7 +237,7 @@ function getBMData(matches: Map<string,BracketMatchData>) {
     return BMData;
 }
 
-function buildRounds(matches: BracketMatchData[]) {
+function buildRounds(matches: MatchData[]) {
     const grouped = Map.groupBy(matches, (m) => m.round);
 
     const rounds = [2,3,4,5,6].map((id) => ({
@@ -267,10 +276,11 @@ function buildPaths(rounds: BracketRoundData[], slotHeights: number[]) {
 }
 
 export function Knockout() {
-    const [matches, setMatches] = useState<BracketMatchData[]>(defaultBM());
+    const [matches, setMatches] = useState<MatchData[]>(defaultBM());
     const [focusRound, setFocusRound] = useState(2);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const segmentBarRef = useRef<HTMLDivElement>(null);
+    const live = useLiveMatch();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -285,6 +295,20 @@ export function Knockout() {
         }
         fetchData();
     }, []);
+
+    useEffect(() => {
+        if (!live) return;
+
+        setMatches((prevMatches) => 
+            prevMatches.map((m) => {
+                if (m.number === live.number) {
+                    return live;
+                }
+                return m;
+            })
+        );
+
+    }, [live]);
 
     const rounds = useMemo(() => buildRounds(matches), [matches]);
     const slotHeights = useMemo(() => getSlotHeights(rounds, focusRound), [rounds, focusRound]);

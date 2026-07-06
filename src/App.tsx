@@ -4,6 +4,7 @@ import { Box, ChakraProvider, Flex, Image, VStack, Link as ChakraLink, Spacer, H
 import { IoMenu } from 'react-icons/io5';
 import { Outlet, NavLink } from 'react-router-dom';
 import { LastUpdate } from './components/Match';
+import { LiveMatchProvider } from './LiveMatchContext';
 
 
 function Logo() {
@@ -107,10 +108,12 @@ function NavBar() {
 function App() {
   return (
     <ChakraProvider value={defaultSystem}>
-      <NavBar />
-      <Box maxWidth='1280px' mx='auto' my='2' px='5'>
-        <Outlet />
-      </Box>
+      <LiveMatchProvider>
+        <NavBar />
+        <Box maxWidth='1280px' mx='auto' my='2' px='5'>
+          <Outlet />
+        </Box>
+      </LiveMatchProvider>
     </ChakraProvider>
   );
 }

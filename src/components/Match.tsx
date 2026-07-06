@@ -5,56 +5,30 @@ import * as icons from "./Icons";
 import { FaChevronLeft, FaChevronRight, FaExclamationTriangle } from "react-icons/fa";
 import { API_URL } from "../lib/Constants";
 import { Flag } from "./Flag";
-
-interface MatchProps {
-    date: number,
-    finishCode: string,
-    winner: string,
-    homeTeam: string,
-    awayTeam: string,
-    homeScore: number,
-    awayScore: number,
-    homeET: number | null,
-    awayET: number | null,
-    homePen: number | null,
-    awayPen: number | null,
-    homeFlagCode: string,
-    awayFlagCode: string,
-    homeFifaCode: string,
-    awayFifaCode: string,
-    homeEvents: MatchEvent[],
-    awayEvents: MatchEvent[]
-}
+import { LiveBadge } from "./LiveBadge";
+import { COUNTRIES } from "../lib/Countries";
+import { useLiveMatch, MatchData, MatchEvent } from "../LiveMatchContext";
 
 const emptyMatch = () => {
     return {
         date: 0,
-        winner: 'draw',
-        finishCode: 'FT',
-        homeTeam: '',
-        awayTeam: '',
+        number: 0,
+        round: 1,
+        winnerID: null,
+        status: 'FT',
+        elapsed: 0,
+        extra: null,
+        homeID: null,
+        awayID: null,
         homeScore: 0,
         awayScore: 0,
         homeET: null,
         awayET: null,
         homePen: null,
         awayPen: null,
-        homeFlagCode: '',
-        awayFlagCode: '',
-        homeFifaCode: '',
-        awayFifaCode: '',
         homeEvents: [],
         awayEvents: []
     }
-}
-
-interface MatchEvent {
-    time: number,
-    extra_time: number,
-    player: string,
-    assist: string,
-    type: string,
-    detail: string
 }
 
 interface EventRowProps {
@@ -93,8 +67,8 @@ function iconForEvent(event: string, detail: string) {
     return icon;
 }
 
-function timeForEvent(time: number, extra: number) {
-    if (extra) {
+function timeString(time: number | null, extra: number | null) {
+    if (extra !== null) {
         return `${time}+${extra}'`;
     } else {
         return `${time}'`;
@@ -178,7 +152,7 @@ function EventRow(props: EventRowProps) {
     return (
         <Table.Row key={props.id} display='flex' flexDirection={flexDir} verticalAlign='center'>
             <Table.Cell key='icon' p='2px' textAlign={alignDir}>{iconForEvent(props.data.type, props.data.detail)}</Table.Cell>
-            <Table.Cell key='time' p='2px' textAlign={alignDir} fontSize='0.6rem' color='gray.600' fontWeight={isGoal ? 'bold' : 'normal'}>{timeForEvent(props.data.time, props.data.extra_time)}</Table.Cell>
+            <Table.Cell key='time' p='2px' textAlign={alignDir} fontSize='0.6rem' color='gray.600' fontWeight={isGoal ? 'bold' : 'normal'}>{timeString(props.data.time, props.data.extra_time)}</Table.Cell>
             <Table.Cell key='main' p='2px' textAlign={alignDir} fontSize='0.6rem' fontWeight={isGoal ? 'bold' : 'normal'}>{mainTextForEvent(props.data.type, props.data.detail, props.data.player, props.data.assist)}</Table.Cell>
             <Table.Cell key='xtra' p='2px' textAlign={alignDir} style={{wordWrap: 'break-word'}} fontSize='0.4rem'>{extraTextForEvent(props.data.type, props.data.detail, props.data.player, props.data.assist)}</Table.Cell>
         </Table.Row>
@@ -248,51 +222,78 @@ function MatchDatePicker(props: MatchDatePickerProps) {
 }
 
 export function LastUpdate() {
-    const [match, setMatch] = useState<MatchProps>(emptyMatch());
+    const liveMatch = useLiveMatch();
+    const [lastMatch, setLastMatch] = useState<MatchData>(emptyMatch());
 
     useEffect(() => {
+        if (liveMatch) {
+            return;
+        }
         const fetchData = async () => {
             try {
                 const res = await fetch(API_URL+'/last');
                 const json = await res.json();
-                setMatch(json);
+                setLastMatch(json);
             } catch (err) {
                 console.log(err);
             }
         }
 
         fetchData();
-    }, []);
 
-    const homeScore = (match.finishCode === 'FT') ? match.homeScore : match.homeET;
-    const awayScore = (match.finishCode === 'FT') ? match.awayScore : match.awayET;
-    const underText = (code: string) => {
-        if (code === 'PEN') {
-            return `PEN: ${match.homePen} - ${match.awayPen}`;
-        } else {
-            return code;
+    }, [liveMatch]);
+
+    const match = liveMatch ?? lastMatch;
+
+    const home_flag_code = match.homeID ? COUNTRIES[match.homeID].flag_code : '';
+    const away_flag_code = match.awayID ? COUNTRIES[match.awayID].flag_code : '';
+    const home_fifa_code = match.homeID ? COUNTRIES[match.homeID].fifa_code : '';
+    const away_fifa_code = match.awayID ? COUNTRIES[match.awayID].fifa_code : '';
+
+    const started = match.status !== 'NS';
+    const homeScore = started ? (match.homeET ?? match.homeScore) : '';
+    const awayScore = started ? (match.awayET ?? match.awayScore) : '';
+    const underText = (status: string) => {
+        switch(status) {
+            case '1H':
+            case '2H':
+            case 'ET':
+            case 'LIVE':
+                return timeString(match.elapsed, match.extra);
+            case 'HT':
+                return 'HT';
+            case 'BT':
+                return 'ET Break';
+            case 'P':
+            case 'PEN':
+                return `PEN: ${match.homePen ?? 0} - ${match.awayPen ?? 0}`;
+            case 'FT':
+            case 'AET':
+                return status;
+            default:
+                return '';
         }
     }
 
     return (
         <Box color='gray.700'>
-            <Text fontWeight='semibold' fontSize={['0.65rem','0.85rem','1rem']}>Last Update</Text>
+            {liveMatch ? <LiveBadge /> : <Text fontWeight='semibold' fontSize={['0.65rem','0.85rem','1rem']}>Last Update</Text>}
             <Box>
                 <Flex w='100%' gap={[2,3]}>
                     {/* Team 1 */}
                     <VStack gap='0' flex='1'>
-                        <Flag countryCode={match.homeFlagCode} w={['28px','34px','40px']} />
-                        <Text fontSize={['0.65rem','0.85rem','1rem']}>{match.homeFifaCode}</Text>
+                        <Flag countryCode={home_flag_code} w={['28px','34px','40px']} />
+                        <Text fontSize={['0.65rem','0.85rem','1rem']}>{home_fifa_code}</Text>
                     </VStack>
                     {/* Score */}
                     <VStack alignSelf='center'>
                         <Text fontSize={['1rem','1.3rem','1.5rem']} fontWeight='bold'>{homeScore ?? ' '} - {awayScore ?? ' '}</Text>
-                        <Text fontSize={['0.5rem','0.65rem','0.8rem']}>{underText(match.finishCode)}</Text>
+                        <Text fontSize={['0.5rem','0.65rem','0.8rem']}>{underText(match.status)}</Text>
                     </VStack>
                     {/* Team 2 */}
                     <VStack gap='0' flex='1'>
-                        <Flag countryCode={match.awayFlagCode} w={['28px','34px','40px']} />
-                        <Text fontSize={['0.65rem','0.85rem','1rem']}>{match.awayFifaCode}</Text>
+                        <Flag countryCode={away_flag_code} w={['28px','34px','40px']} />
+                        <Text fontSize={['0.65rem','0.85rem','1rem']}>{away_fifa_code}</Text>
                     </VStack>
                 </Flex>
             </Box>
@@ -300,36 +301,60 @@ export function LastUpdate() {
         );
 }
 
-function Match(props: MatchProps) {
-    const homeScore = (props.finishCode === 'FT') ? props.homeScore : props.homeET;
-    const awayScore = (props.finishCode === 'FT') ? props.awayScore : props.awayET;
-    const underText = (code: string) => {
-        if (code === 'PEN') {
-            return `PEN: ${props.homePen} - ${props.awayPen}`;
-        } else {
-            return code;
+function Match(props: MatchData) {
+    const started = props.status !== 'NS';
+    const finished = (props.status === 'FT' || props.status === 'AET' || props.status === 'PEN');
+    const live = started && !finished;
+
+    const home_flag_code = props.homeID ? COUNTRIES[props.homeID].flag_code : '';
+    const away_flag_code = props.awayID ? COUNTRIES[props.awayID].flag_code : '';
+    const home_name = props.homeID ? COUNTRIES[props.homeID].name : 'TBD';
+    const away_name = props.awayID ? COUNTRIES[props.awayID].name : 'TBD';
+
+    const homeScore = started ? (props.homeET ?? props.homeScore ?? 0) : '';
+    const awayScore = started ? (props.awayET ?? props.awayScore ?? 0) : '';
+    const underText = (status: string) => {
+        switch(status) {
+            case '1H':
+            case '2H':
+            case 'ET':
+            case 'LIVE':
+                return timeString(props.elapsed, props.extra);
+            case 'HT':
+                return 'HT';
+            case 'BT':
+                return 'ET Break';
+            case 'P':
+            case 'PEN':
+                return `PEN: ${props.homePen ?? 0} - ${props.awayPen ?? 0}`;
+            case 'FT':
+            case 'AET':
+                return status;
+            default:
+                return '';
         }
     }
 
     return (
         <Box color='gray.700' border='1px solid' borderColor='gray.200' borderRadius='md' p='5'>
             <VStack separator={<Separator borderColor='gray.200'/>}>
-                <Text fontSize='0.8rem'>{getFormattedDate(props.date)}</Text>
+                {live ? <LiveBadge /> : <Text fontSize='0.8rem'>{getFormattedDate(props.date)}</Text>}
                 <Flex w='100%'>
                     {/* Team 1 */}
                     <VStack gap='1' flex='1'>
-                        <Flag countryCode={props.homeFlagCode} w='60px'/>
-                        <Text fontSize='1rem' fontWeight='semibold'>{props.homeTeam}</Text>
+                        <Flag countryCode={home_flag_code} w='60px'/>
+                        <Text fontSize='1rem' fontWeight='semibold'>{home_name}</Text>
                     </VStack>
                     {/* Score */}
                     <VStack alignSelf='center'>
                         <Text fontSize='2rem' fontWeight='bold'>{homeScore ?? ' '} - {awayScore ?? ' '}</Text>
-                        <Text fontSize='1rem'>{underText(props.finishCode)}</Text>
+                        <Text fontSize='1rem'>{underText(props.status)}</Text>
+                        
                     </VStack>
                     {/* Team 2 */}
                     <VStack gap='1' flex='1'>
-                        <Flag countryCode={props.awayFlagCode} w='60px' />
-                        <Text fontSize='1rem' fontWeight='semibold'>{props.awayTeam}</Text>
+                        <Flag countryCode={away_flag_code} w='60px' />
+                        <Text fontSize='1rem' fontWeight='semibold'>{away_name}</Text>
                     </VStack>
                 </Flex>
                 <Accordion.Root w='100%' collapsible>
@@ -352,9 +377,11 @@ function Match(props: MatchProps) {
 
 export function Matches() {
     const localTZ = getLocalTimeZone();
-    const [match, setMatch] = useState<MatchProps[]>([]);
+    const [matches, setMatches] = useState<MatchData[]>([]);
     const [date, setDate] = useState<DateValue>(today(localTZ));
     const [isLoading, setIsLoading] = useState(true);
+    const live = useLiveMatch();
+    
 
     useEffect(() => {
         const fetchData = async () => {
@@ -368,7 +395,7 @@ export function Matches() {
 
                 const res = await fetch(`${API_URL}/match?${params.toString()}`);
                 const json = await res.json();
-                setMatch(json);
+                setMatches(json);
                 setIsLoading(false);
             } catch (err) {
                 console.log(err);
@@ -386,6 +413,20 @@ export function Matches() {
         setDate(date.add({days:1}))
     }
 
+    useEffect(() => {
+        if (!live) return;
+
+        setMatches((prevMatches) => 
+            prevMatches.map((m) => {
+                if (m.number === live.number) {
+                    return live;
+                }
+                return m;
+            })
+        );
+
+    }, [live]);
+
     return (
         <VStack>
             <HStack>
@@ -401,9 +442,9 @@ export function Matches() {
             </HStack>
             {isLoading ? <Spinner mt='10' size='xl'/> : null}
             <Flex direction='column' w={['100%', '450px']} gap='5' mb='5'>
-                {match.map((m, i) => <Match key={i} {...m}/>)}
+                {matches.map((m, i) => <Match key={i} {...m}/>)}
             </Flex>
-            {(!isLoading && match.length === 0) ? <Heading fontSize='1.25rem' color='gray.500' mt='20'>No matches on this day.</Heading> : null}
+            {(!isLoading && matches.length === 0) ? <Heading fontSize='1.25rem' color='gray.500' mt='20'>No matches on this day.</Heading> : null}
         </VStack>
     )
 }
